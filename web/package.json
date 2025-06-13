@@ -2,12 +2,10 @@
     "name": "marketplace",
     "version": "1.0.0",
     "scripts": {
-        "start": "parcel src/index.html --port 3000",
+        "start": "parcel src/index.html",
         "start:dev": "parcel src/index.html --port 3000",
         "start:prod": "parcel src/index.html --port 3000 --no-hmr",
-        "build": "parcel build src/index.html --public-url ./",
-        "build:dev": "parcel build src/index.html --public-url ./ --no-optimize",
-        "build:prod": "parcel build src/index.html --public-url ./",
+        "build": "parcel build src/index.html",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "",
