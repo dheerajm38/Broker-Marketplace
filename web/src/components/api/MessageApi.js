@@ -4,7 +4,7 @@ export const fetchChatList = async (userId) => {
     try {
         console.log("User userId", userId);
         const response = await axios.get(
-            `http://localhost:8000/message/chatList/${userId}`
+            `http://13.203.197.179/message/chatList/${userId}`
         );
         console.log("Response data", response.data);
         return response.data;
@@ -16,7 +16,7 @@ export const fetchChatList = async (userId) => {
 export const fetchMessages = async (senderId, receiverId) => {
     try {
         const response = await axios.get(
-            `http://localhost:8000/message/getMessages/${senderId}/${receiverId}`
+            `http://13.203.197.179/message/getMessages/${senderId}/${receiverId}`
         );
         return response.data;
     } catch (error) {
@@ -31,7 +31,7 @@ export const fetchMessagesSender = async (
 ) => {
     try {
         const response = await axios.get(
-            `http://localhost:8000/message/getMessages/${senderId}/${receiverId}`,
+            `http://13.203.197.179/message/getMessages/${senderId}/${receiverId}`,
             {
                 params: {
                     startMessage: messageStart,
