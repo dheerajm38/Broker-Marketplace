@@ -5,7 +5,7 @@ import { createMessage, updateChatHistory } from '../Services/MessageService.js'
 export const socketConfig = (server) => {
     const io = new Server(server,{
         cors: {
-            origin: ["http://localhost:1234", "https://3546-2402-a00-401-4bd2-f433-7f15-3514-66ee.ngrok-free.app"], // have to add mobile app url here
+            origin: ["http://localhost:1234", "https://3546-2402-a00-401-4bd2-f433-7f15-3514-66ee.ngrok-free.app", "http://13.203.197.179"], // have to add mobile app url here
             allowedHeaders: ["my-custom-header"],
             credentials: true
         }

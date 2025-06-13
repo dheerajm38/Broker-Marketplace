@@ -4,8 +4,8 @@ const getRefreshToken = () => localStorage.getItem("refreshToken");
 
 // Custom axios instance
 export const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
-    // baseURL: "http://13.203.197.179/",
+    // baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
+    baseURL: "http://13.203.197.179",
     withCredentials: true, // Important for cookies
 });
 
