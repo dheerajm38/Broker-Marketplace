@@ -1,14 +1,30 @@
+// api/backend.js
+// Vercel Serverless Function for Parcel React App
+
 export default async function handler(req, res) {
-  const { method, body, url, headers } = req;
+  // Handle CORS preflight
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
+    res.status(200).end();
+    return;
+  }
+
+  const { method, body, headers } = req;
+  
+  // For Vercel serverless functions, we need to parse the URL differently
+  const url = new URL(req.url, `https://${req.headers.host}`);
+  const pathname = url.pathname;
   
   // Extract the path after '/api/backend'
-  // Example: /api/backend/users/123 → /users/123
-  const path = url.replace('/api/backend', '') || '/';
+  // Example: /api/backend/auth/login → /auth/login
+  const path = pathname.replace('/api/backend', '') || '/';
   
-  // Your EC2 backend URL (HTTP is fine for server-to-server)
+  // Your EC2 backend URL
   const backendUrl = `http://13.203.197.179${path}`;
   
-  console.log(`Proxying ${method} ${url} → ${backendUrl}`);
+  console.log(`Proxying ${method} ${pathname} → ${backendUrl}`);
   
   try {
     // Prepare the request to your backend
@@ -19,13 +35,12 @@ export default async function handler(req, res) {
         // Forward important headers
         ...(headers.authorization && { 'Authorization': headers.authorization }),
         ...(headers['x-api-key'] && { 'X-API-Key': headers['x-api-key'] }),
-        // Add any other headers your backend needs
       },
     };
 
     // Add body for POST/PUT/PATCH requests
     if (['POST', 'PUT', 'PATCH'].includes(method) && body) {
-      fetchOptions.body = JSON.stringify(body);
+      fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
     }
 
     // Make the request to your EC2 backend
@@ -41,22 +56,27 @@ export default async function handler(req, res) {
       data = await response.text();
     }
     
-    // Set CORS headers for the frontend
+    // Set CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
     
-    // Handle preflight requests
-    if (method === 'OPTIONS') {
-      res.status(200).end();
-      return;
-    }
-    
     // Return the response from your backend
-    res.status(response.status).json(data);
+    res.status(response.status);
+    
+    if (typeof data === 'object') {
+      res.json(data);
+    } else {
+      res.send(data);
+    }
     
   } catch (error) {
     console.error('Proxy error:', error);
+    
+    // Set CORS headers for error responses too
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key');
     
     // Handle different types of errors
     if (error.code === 'ECONNREFUSED') {
@@ -72,7 +92,8 @@ export default async function handler(req, res) {
     } else {
       res.status(500).json({ 
         error: 'Internal server error',
-        message: 'Proxy request failed'
+        message: 'Proxy request failed',
+        details: error.message
       });
     }
   }
