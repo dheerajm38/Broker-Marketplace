@@ -1,5 +1,5 @@
-// api/backend.js
-// Vercel Serverless Function for Parcel React App
+// api/backend/[...path].js
+// This catches ALL requests to /api/backend/* 
 
 export default async function handler(req, res) {
   // Handle CORS preflight
@@ -11,20 +11,17 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { method, body, headers } = req;
+  const { method, body, headers, query } = req;
   
-  // For Vercel serverless functions, we need to parse the URL differently
-  const url = new URL(req.url, `https://${req.headers.host}`);
-  const pathname = url.pathname;
-  
-  // Extract the path after '/api/backend'
-  // Example: /api/backend/auth/login → /auth/login
-  const path = pathname.replace('/api/backend', '') || '/';
+  // query.path contains the dynamic path segments as an array
+  // /api/backend/auth/login → query.path = ['auth', 'login']
+  const pathSegments = query.path || [];
+  const path = '/' + pathSegments.join('/');
   
   // Your EC2 backend URL
   const backendUrl = `http://13.203.197.179${path}`;
   
-  console.log(`Proxying ${method} ${pathname} → ${backendUrl}`);
+  console.log(`Proxying ${method} /api/backend${path} → ${backendUrl}`);
   
   try {
     // Prepare the request to your backend
