@@ -7,8 +7,6 @@ import {
     Ticket,
     Favorite,
 } from "../Model/Models.js";
-// import { awsConfig } from "../Config/AWSconfig.js";
-// import { aws } from "dynamoose";
 import AWS from "aws-sdk";
 import multer from "multer";
 import multerS3 from "multer-s3";
@@ -389,17 +387,10 @@ router.post("/all/user/new", async (req, res) => {
         if (cities && cities.length > 0) {
             productList = productList.filter((product) => {
                 const sellerCity = sellerMap[product.seller_id]?.city;
-                // console.log(product);
-                // console.log(sellerCity);
-                // console.log(cities.includes(sellerCity));
                 return sellerCity && cities.includes(sellerCity);
             });
         }
 
-        // console.log("Pleaseee");
-        // console.log(productList);
-
-        // Sort the product list based on the sort parameter
         if (sort) {
             switch (sort) {
                 case "Low to high":
@@ -428,9 +419,6 @@ router.post("/all/user/new", async (req, res) => {
         // Calculate total count after filtering
         totalCount = productList.length;
 
-        // console.log(totalCount);
-
-        // Calculate pagination
         const totalPages = Math.ceil(totalCount / limit);
         if (page > totalPages && totalCount > 0) {
             return res.status(200).json({
@@ -518,62 +506,6 @@ router.post("/all/user/interested", async (req, res) => {
             return acc;
         }, {});
 
-        // Filter by location if provided
-        // if (location) {
-        //     ticketsList = ticketsList.filter(ticket => {
-        //         const sellerCity = sellerMap[ticket.seller_id]?.city;
-        //         return sellerCity && sellerCity.toLowerCase() === location.toLowerCase();
-        //     });
-        // }
-
-        // Filter by subcategories if provided
-        // if (subcategories && subcategories.length > 0) {
-        //     // We need to get subcategory info from the products
-        //     const productIds = ticketsList.map(ticket => ticket.product_id);
-        //     const products = await Product.scan("product_id").in(productIds).exec();
-
-        //     const productMap = products.reduce((acc, product) => {
-        //         acc[product.product_id] = product;
-        //         return acc;
-        //     }, {});
-
-        //     ticketsList = ticketsList.filter(ticket => {
-        //         const product = productMap[ticket.product_id];
-        //         return product && subcategories.includes(product.sub_category.sub_category_id);
-        //     });
-        // }
-
-        // Filter by cities if provided
-        // if (cities && cities.length > 0) {
-        //     ticketsList = ticketsList.filter(ticket => {
-        //         const sellerCity = sellerMap[ticket.seller_id]?.city;
-        //         return sellerCity && cities.includes(sellerCity);
-        //     });
-        // }
-
-        // Sort the tickets list based on the sort parameter
-        // if (sort) {
-        //     switch (sort) {
-        //         case "Low to high":
-        //             ticketsList.sort((a, b) => a.price - b.price);
-        //             break;
-        //         case "High to low":
-        //             ticketsList.sort((a, b) => b.price - a.price);
-        //             break;
-        //         case "Newest":
-        //         default:
-        //             ticketsList.sort(
-        //                 (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-        //             );
-        //             break;
-        //     }
-        // } else {
-        //     // Default sort by newest
-        //     ticketsList.sort(
-        //         (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-        //     );
-        // }
-
         // Calculate total count after filtering
         const totalCount = ticketsList.length;
 
@@ -646,7 +578,6 @@ router.get("/all/employee", async (req, res) => {
                 .eq(location)
                 .exec();
 
-            // console.log("SELLER LIST", sellerList);
             if (sellerList.length === 0) {
                 return res.status(200).json({
                     status: "success",
@@ -691,8 +622,7 @@ router.get("/all/employee", async (req, res) => {
 
         // Fetch all sellers in one query
         const sellers = await User.scan("user_id").in(sellerIds).exec();
-        // console.log("SELLERS", sellers);
-        // Create seller lookup map
+
         const sellerMap = sellers.reduce((acc, seller) => {
             acc[seller.user_id] = {
                 name: seller.personal_details.fullName,
@@ -749,14 +679,6 @@ router.get("/:productId", async (req, res) => {
             .eq(product[0].seller_id)
             .exec();
 
-        // let images = [
-        //     "https://d-marketplace-images.s3.us-east-1.amazonaws.com/Screenshot+(179).png",
-        //     "https://d-marketplace-images.s3.us-east-1.amazonaws.com/Screenshot+(180).png",
-        //     "https://d-marketplace-images.s3.us-east-1.amazonaws.com/Screenshot+(185).png",
-        // ];
-        // images = images.map((url) => getCloudFrontUrl(url));
-
-        // console.log(images);
 
         const productWithSellerDetails = {
             ...product[0],
@@ -766,19 +688,6 @@ router.get("/:productId", async (req, res) => {
                 seller[0]?.company_details?.company_name || "Unknown Company",
         };
 
-        // if (product.images && product.images.length > 0) {
-        //     const cloudFrontDomain = 'https://your-distribution-id.cloudfront.net;
-
-        //     // Map each image URL to use CloudFront
-        //     product.images = product.images.map(imageUrl => {
-        //       // If the URL is already a full S3 URL, extract just the object key path
-        //       const objectPath = imageUrl.includes('amazonaws.com')
-        //         ? imageUrl.split('.com/')[1]
-        //         : imageUrl;
-
-        //       return `${cloudFrontDomain}/${objectPath}`;
-        //     });
-        //   }
 
         return res.status(200).json({
             status: "success",
@@ -827,115 +736,6 @@ const getCloudFrontUrl = (imageUrl) => {
     // If it's just an object key
     return `${cloudFrontDomain}/${imageUrl}`;
 };
-
-// Add Product route
-// router.post("/add", async (req, res) => {
-//     try {
-//         const { user } = req.user;
-//         console.log("USER", user);
-//         const addedBy = {
-//             user_id: user.moderator_id,
-//             user_name: user.name,
-//         };
-//         if (!user) {
-//             return res.status(401).json({
-//                 status: "error",
-//                 message: "Unauthorized access",
-//             });
-//         }
-//         const {
-//             categoryID,
-//             subCategoryID,
-//             description,
-//             price,
-//             price_details,
-//             image,
-//             name,
-//         } = req.body;
-//         const seller_id = req.query.seller_id;
-
-//         if (!categoryID) {
-//             return res.status(400).json({
-//                 status: "error",
-//                 message: "Category ID is required",
-//             });
-//         }
-
-//         if (!subCategoryID) {
-//             return res.status(400).json({
-//                 status: "error",
-//                 message: "SubCategory ID is required",
-//             });
-//         }
-
-//         if (!price_details || !price_details.unit || !price_details.quantity) {
-//             return res.status(400).json({
-//                 status: "error",
-//                 message: "Price details(Unit and Quantity) are required",
-//             });
-//         }
-
-//         const category = await Category.scan("category_id")
-//             .eq(categoryID)
-//             .exec();
-//         if (category.length === 0) {
-//             return res.status(400).json({
-//                 status: "error",
-//                 message: "Category ID is invalid",
-//             });
-//         }
-
-//         const subCategory = await SubCategory.scan("sub_category_id")
-//             .eq(subCategoryID)
-//             .exec();
-//         if (subCategory.length === 0) {
-//             return res.status(400).json({
-//                 status: "error",
-//                 message: "SubCategory ID is invalid",
-//             });
-//         }
-
-//         const newProduct = new Product({
-//             category_id: categoryID,
-//             sub_category_id: subCategoryID,
-//             price,
-//             price_details: {
-//                 unit: price_details.unit,
-//                 quantity: price_details.quantity,
-//             },
-//             image,
-//             seller_id,
-//             // added_by:
-//             //     user?.moderator_id || "Change user in product.js 184 line",
-//             status: "active",
-//             name: name,
-//             category: {
-//                 category_name: category[0].name,
-//                 category_id: category[0].category_id,
-//             },
-//             sub_category: {
-//                 sub_category_name: subCategory[0].name,
-//                 sub_category_id: subCategory[0].sub_category_id,
-//             },
-//             added_by: addedBy,
-//             updated_by: { ...addedBy },
-//         });
-//         console.log("NEW PRODUCT", newProduct);
-//         await newProduct.save();
-
-//         return res.status(201).json({
-//             status: "success",
-//             message: "Product added successfully",
-//             data: newProduct,
-//         });
-//     } catch (error) {
-//         console.error("Error adding product:", error);
-//         return res.status(500).json({
-//             status: "error",
-//             message: error.message || "Failed to add product",
-//         });
-//     }
-// });
 
 //Delete Product route
 router.delete("/delete", async (req, res) => {
@@ -1182,8 +982,6 @@ const transformToInterestedProductsListFromTickets = (tickets, sellerMap) => {
         updatedAt: ticket.updatedAt || ticket.createdAt,
         ticket_id: ticket.ticket_id,
         isInterested: true, // All tickets are inherently "interested" items
-        // Note: Images will need to be handled differently since they're not stored in the ticket
-        // This could be a good opportunity to add an images field to the ticket schema if needed
     }));
 
     return transformedProducts;

@@ -95,45 +95,6 @@ router.get("/:id", async (req, res) => {
     }
 });
 
-// Update moderator
-// router.put("/:id", async (req, res) => {
-//     try {
-//         const { name, email, password, phone, role } = req.body;
-//         const moderatorId = req.params.id;
-
-//         // Check if moderator exists
-//         const existingModerator = await Moderator.get(moderatorId);
-//         if (!existingModerator) {
-//             return res.status(404).json({ message: "Moderator not found" });
-//         }
-
-//         // Prepare update object
-//         const updateData = {};
-//         if (name) updateData.name = name;
-//         if (email) updateData.email = email;
-//         if (password) updateData.password = await bcrypt.hash(password, 10);
-//         if (phone) updateData.phone = phone;
-//         if (role) updateData.role = role;
-
-//         // Update moderator
-//         const updatedModerator = await Moderator.update(
-//             moderatorId,
-//             updateData
-//         );
-
-//         // Remove password from response
-//         const moderatorResponse = { ...updatedModerator };
-//         delete moderatorResponse.password;
-
-//         res.status(200).json(moderatorResponse);
-//     } catch (error) {
-//         console.error("Error updating moderator:", error);
-//         res.status(500).json({
-//             message: "Error updating moderator",
-//             error: error.message,
-//         });
-//     }
-// });
 router.put("/:id", async (req, res) => {
     try {
         console.log("Inside /put for moderator");

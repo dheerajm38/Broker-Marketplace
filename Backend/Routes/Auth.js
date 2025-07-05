@@ -182,19 +182,6 @@ router.post("/refresh-token", async (req, res) => {
             process.env.REFRESH_TOKEN_SECRET
         );
         console.log("Decoded2", decoded);
-
-        // Check if token exists in database and is valid, currently omitting for debugging and testing
-        // const isValid = await validateRefreshToken(
-        //     decoded.moderator_id,
-        //     refreshToken
-        // );
-
-        // if (!isValid) {
-        //     return res
-        //         .status(401)
-        //         .json(apiResponse(401, "Invalid refresh token"));
-        // }
-
         // Generate new tokens
         const isMobile = req.headers["device"]?.includes("mobile");
         console.log("is mobile ",isMobile);
@@ -205,29 +192,6 @@ router.post("/refresh-token", async (req, res) => {
         // Update the refresh token in database
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 7);
-
-        // Remove old token
-        // await invalidateRefreshToken(decoded.moderator_id, refreshToken);
-
-        // Save new token
-        // await ModeratorToken.create({
-        //     moderator_id: decoded.moderator_id,
-        //     refresh_token: newRefreshToken,
-        //     user_agent: req.headers["user-agent"] || "",
-        //     expires_at: expiresAt,
-        // });
-
-        // Handle response based on client type
-        // const isReactNative = (req.headers["user-agent"] || "").includes(
-        //     "ReactNative"
-        // );
-
-        // if (isReactNative) {
-        //     return res.json({
-        //         accessToken: newAccessToken,
-        //         refreshToken: newRefreshToken,
-        //     });
-        // }
 
         res.cookie("REFRESH", newRefreshToken, {
             httpOnly: true,
@@ -245,31 +209,6 @@ router.post("/refresh-token", async (req, res) => {
         return res.status(401).json(apiResponse(401, "Invalid refresh token"));
     }
 });
-
-// This will be used as middleware
-// export const verifyToken = (req, res, next) => {
-//     // Extract the token from the Authorization header
-//     const token = req.headers["authorization"]?.split(" ")[1]; // Format: 'Bearer <token>'
-
-//     if (!token) {
-//         return res
-//             .status(401)
-//             .json(apiResponse(401, "Access token is missing."));
-//     }
-
-//     // Verify the token
-//     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
-//         if (err) {
-//             return res
-//                 .status(403)
-//                 .json(apiResponse(403, "Invalid or expired access token."));
-//         }
-
-//         // If token is valid, attach decoded user info to the request object
-//         req.user = decoded; // You can access the user info later in the request lifecycle
-//         next(); // Proceed to the next middleware or route handler
-//     });
-// };
 
 async function validateRefreshToken(moderatorId, token) {
     try {

@@ -1,6 +1,3 @@
-// File: notification-routes.js
-// API routes for push notifications
-
 import express from 'express';
 import notificationService from '../Services/NotificationService.js';
 
