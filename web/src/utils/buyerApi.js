@@ -4,7 +4,7 @@ import { api } from "../components/axiosConfig";
 export const fetchBuyerOrSellerDetails = async (role) => {
     try {
         const response = await api.get(
-            `https://broker-marketplace.vercel.app/api/backend/user/fetchDetails/${role}`,
+            `https://api.dhirajmittal.com/user/fetchDetails/${role}`,
             {
                 params: {
                     role: role,

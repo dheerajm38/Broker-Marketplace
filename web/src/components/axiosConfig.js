@@ -2,10 +2,9 @@ import axios from "axios";
 
 const getRefreshToken = () => localStorage.getItem("refreshToken");
 
-// Custom axios instance
+// Custom axios instance    
 export const api = axios.create({
-    // baseURL: process.env.REACT_APP_API_URL || 'http://localhost:8000',
-    baseURL: "https://broker-marketplace.vercel.app/api/backend",
+    baseURL: 'https://api.dhirajmittal.com',
     withCredentials: true, // Important for cookies
 });
 

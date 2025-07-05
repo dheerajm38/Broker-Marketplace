@@ -13,7 +13,7 @@ export function SocketProvider({ children }) {
     const { user, isAuthenticated, loading } = useAuth();
     console.log("User ", user);
     useEffect(() => {
-        const newSocket = io("https://broker-marketplace.vercel.app/api/backend", {
+        const newSocket = io("https://api.dhirajmittal.com", {
             query: {
                 userId: user.userId,
                 token: localStorage.getItem("token"),
