@@ -746,23 +746,6 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                 });
             }
 
-            // Validate assigned operator if provided
-            // if (assigned_operator) {
-            //     const operatorExists = await Moderator.scan("moderator_id")
-            //         .eq(assigned_operator)
-            //         .and()
-            //         .where("role")
-            //         .eq("Operator")
-            //         .exec();
-
-            //     if (operatorExists.count === 0) {
-            //         return res.status(400).json({
-            //             success: false,
-            //             message: "Invalid assigned operator"
-            //         });
-            //     }
-            // }
-
             // Create new user with only required and provided fields
             const userFields = {
                 personal_details: {
@@ -932,22 +915,13 @@ router.post("/createbuyer", async (req, res) => {
                     city: city,
                 },
             },
-            // fcm_token: fcm_token?.trim() || "", // Add FCM token
         });
 
         const savedBuyer = await retryOperation(
             () => newBuyerOnboarding.save(),
             3
         );
-
-        // console.log(savedBuyer);
-        // console.log(newBuyerOnboarding);
-
-        // Create notifications for admins with complete saved request data
         await createAdminNotifications({}, savedBuyer);
-
-        //Once Success send OTP To User
-        // const otpResponse = await sendOTP(phone_number)
 
         return res.status(201).json({
             message: "Buyer onboarding request created successfully",
