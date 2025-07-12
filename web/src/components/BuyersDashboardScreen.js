@@ -22,6 +22,7 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [editingBuyer, setEditingBuyer] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [formErrors, setFormErrors] = useState({});
 
     useEffect(() => {
         const fetchBuyers = async () => {
@@ -95,6 +96,7 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
         setEditingBuyer({ ...buyer });
         setIsEditModalOpen(true);
         setActiveDropdown(null);
+        setFormErrors({});
     };
 
     const handleDelete = async (buyerId) => {
@@ -111,9 +113,65 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
         }
     };
 
+    // Validation functions
+    const validateForm = () => {
+        const errors = {};
+
+        // Check if any field is empty
+        if (!editingBuyer.name.trim()) {
+            errors.name = "Name is required";
+        }
+
+        if (!editingBuyer.mobile.trim()) {
+            errors.mobile = "Mobile number is required";
+        } else if (editingBuyer.mobile.length !== 10) {
+            errors.mobile = "Mobile number must be exactly 10 digits";
+        }
+
+        if (!editingBuyer.company.trim()) {
+            errors.company = "Company name is required";
+        }
+
+        if (!editingBuyer.gst.trim()) {
+            errors.gst = "GST number is required";
+        } else if (editingBuyer.gst.length !== 15) {
+            errors.gst = "GST number must be exactly 15 characters";
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    // Handle mobile number input - only digits, max 10
+    const handleMobileChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ""); // Remove non-digits
+        if (value.length <= 10) {
+            setEditingBuyer({
+                ...editingBuyer,
+                mobile: value,
+            });
+        }
+    };
+
+    // Handle GST number input - auto capitalize and max 15 chars
+    const handleGSTChange = (e) => {
+        const value = e.target.value.toUpperCase(); // Auto capitalize
+        if (value.length <= 15) {
+            setEditingBuyer({
+                ...editingBuyer,
+                gst: value,
+            });
+        }
+    };
+
     // Save edited buyer
     const handleSaveEdit = async (e) => {
         e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
         try {
             const response = await api.put(`/user/${editingBuyer.id}`, {
                 personal_details: {
@@ -133,6 +191,7 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
             );
             setIsEditModalOpen(false);
             setEditingBuyer(null);
+            setFormErrors({});
         } catch (err) {
             console.error("Error updating buyer:", err);
             alert("Failed to update buyer. Please try again.");
@@ -358,7 +417,8 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Name
+                                        Name{" "}
+                                        <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -369,28 +429,46 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                                                 name: e.target.value,
                                             })
                                         }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            formErrors.name
+                                                ? "border-red-500"
+                                                : "border-gray-300"
+                                        }`}
+                                        placeholder="Enter full name"
                                     />
+                                    {formErrors.name && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {formErrors.name}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Mobile
+                                        Mobile{" "}
+                                        <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={editingBuyer.mobile}
-                                        onChange={(e) =>
-                                            setEditingBuyer({
-                                                ...editingBuyer,
-                                                mobile: e.target.value,
-                                            })
-                                        }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        onChange={handleMobileChange}
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            formErrors.mobile
+                                                ? "border-red-500"
+                                                : "border-gray-300"
+                                        }`}
+                                        placeholder="Enter 10-digit mobile number"
+                                        maxLength="10"
                                     />
+                                    {formErrors.mobile && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {formErrors.mobile}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Company
+                                        Company{" "}
+                                        <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -401,30 +479,50 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                                                 company: e.target.value,
                                             })
                                         }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            formErrors.company
+                                                ? "border-red-500"
+                                                : "border-gray-300"
+                                        }`}
+                                        placeholder="Enter company name"
                                     />
+                                    {formErrors.company && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {formErrors.company}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        GST
+                                        GST Number{" "}
+                                        <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={editingBuyer.gst}
-                                        onChange={(e) =>
-                                            setEditingBuyer({
-                                                ...editingBuyer,
-                                                gst: e.target.value,
-                                            })
-                                        }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        onChange={handleGSTChange}
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            formErrors.gst
+                                                ? "border-red-500"
+                                                : "border-gray-300"
+                                        }`}
+                                        placeholder="Enter 15-character GST number"
+                                        maxLength="15"
                                     />
+                                    {formErrors.gst && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {formErrors.gst}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className="mt-6 flex justify-end space-x-3">
                                 <button
                                     type="button"
-                                    onClick={() => setIsEditModalOpen(false)}
+                                    onClick={() => {
+                                        setIsEditModalOpen(false);
+                                        setFormErrors({});
+                                    }}
                                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
                                 >
                                     Cancel

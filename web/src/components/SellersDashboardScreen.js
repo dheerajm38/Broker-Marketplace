@@ -24,6 +24,7 @@ const SellersDashboard = ({ isSidebarOpen }) => {
     const [currentPage, setCurrentPage] = useState(1);
     const [editingSeller, setEditingSeller] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [validationErrors, setValidationErrors] = useState({});
 
     // Fetch sellers from API
     useEffect(() => {
@@ -55,6 +56,58 @@ const SellersDashboard = ({ isSidebarOpen }) => {
 
         fetchSellers();
     }, []);
+
+    // Validation functions
+    const validateForm = () => {
+        const errors = {};
+
+        // Check if any field is empty
+        if (!editingSeller.name.trim()) {
+            errors.name = "Name is required";
+        }
+
+        if (!editingSeller.mobile.trim()) {
+            errors.mobile = "Mobile number is required";
+        } else if (editingSeller.mobile.length !== 10) {
+            errors.mobile = "Mobile number must be exactly 10 digits";
+        }
+
+        if (!editingSeller.company.trim()) {
+            errors.company = "Company name is required";
+        }
+
+        if (!editingSeller.gst.trim()) {
+            errors.gst = "GST number is required";
+        } else if (editingSeller.gst.length !== 15) {
+            errors.gst = "GST number must be exactly 15 characters";
+        }
+
+        setValidationErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    // Handle mobile number input - only allow digits and max 10 characters
+    const handleMobileChange = (e) => {
+        const value = e.target.value.replace(/\D/g, ""); // Remove non-digit characters
+        if (value.length <= 10) {
+            setEditingSeller({
+                ...editingSeller,
+                mobile: value,
+            });
+        }
+    };
+
+    // Handle GST number input - auto capitalize and enforce length limit
+    const handleGSTChange = (e) => {
+        const value = e.target.value.toUpperCase(); // Auto capitalize
+        if (value.length <= 15) {
+            // Indian GST number is 15 characters
+            setEditingSeller({
+                ...editingSeller,
+                gst: value,
+            });
+        }
+    };
 
     // Pagination settings
     const itemsPerPage = 5;
@@ -94,6 +147,7 @@ const SellersDashboard = ({ isSidebarOpen }) => {
         setEditingSeller({ ...seller });
         setIsEditModalOpen(true);
         setActiveDropdown(null);
+        setValidationErrors({}); // Clear validation errors
     };
 
     // Delete seller data
@@ -113,6 +167,11 @@ const SellersDashboard = ({ isSidebarOpen }) => {
     // Save edited seller
     const handleSaveEdit = async (e) => {
         e.preventDefault();
+
+        if (!validateForm()) {
+            return; // Stop if validation fails
+        }
+
         try {
             const response = await api.put(`/user/${editingSeller.id}`, {
                 personal_details: {
@@ -134,6 +193,7 @@ const SellersDashboard = ({ isSidebarOpen }) => {
             );
             setIsEditModalOpen(false);
             setEditingSeller(null);
+            setValidationErrors({});
         } catch (err) {
             console.error("Error updating seller:", err);
             alert("Failed to update seller. Please try again.");
@@ -370,7 +430,7 @@ const SellersDashboard = ({ isSidebarOpen }) => {
                             <div className="space-y-4">
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Name
+                                        Name *
                                     </label>
                                     <input
                                         type="text"
@@ -381,28 +441,44 @@ const SellersDashboard = ({ isSidebarOpen }) => {
                                                 name: e.target.value,
                                             })
                                         }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            validationErrors.name
+                                                ? "border-red-300"
+                                                : "border-gray-300"
+                                        }`}
+                                        required
                                     />
+                                    {validationErrors.name && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {validationErrors.name}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Mobile
+                                        Mobile * (10 digits only)
                                     </label>
                                     <input
                                         type="text"
                                         value={editingSeller.mobile}
-                                        onChange={(e) =>
-                                            setEditingSeller({
-                                                ...editingSeller,
-                                                mobile: e.target.value,
-                                            })
-                                        }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        onChange={handleMobileChange}
+                                        placeholder="Enter 10-digit mobile number"
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            validationErrors.mobile
+                                                ? "border-red-300"
+                                                : "border-gray-300"
+                                        }`}
+                                        required
                                     />
+                                    {validationErrors.mobile && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {validationErrors.mobile}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        Company
+                                        Company *
                                     </label>
                                     <input
                                         type="text"
@@ -413,30 +489,49 @@ const SellersDashboard = ({ isSidebarOpen }) => {
                                                 company: e.target.value,
                                             })
                                         }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            validationErrors.company
+                                                ? "border-red-300"
+                                                : "border-gray-300"
+                                        }`}
+                                        required
                                     />
+                                    {validationErrors.company && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {validationErrors.company}
+                                        </p>
+                                    )}
                                 </div>
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700">
-                                        GST
+                                        GST * (15 characters)
                                     </label>
                                     <input
                                         type="text"
                                         value={editingSeller.gst}
-                                        onChange={(e) =>
-                                            setEditingSeller({
-                                                ...editingSeller,
-                                                gst: e.target.value,
-                                            })
-                                        }
-                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                        onChange={handleGSTChange}
+                                        placeholder="Enter GST number (auto-capitalized)"
+                                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                                            validationErrors.gst
+                                                ? "border-red-300"
+                                                : "border-gray-300"
+                                        }`}
+                                        required
                                     />
+                                    {validationErrors.gst && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {validationErrors.gst}
+                                        </p>
+                                    )}
                                 </div>
                             </div>
                             <div className="mt-6 flex justify-end space-x-3">
                                 <button
                                     type="button"
-                                    onClick={() => setIsEditModalOpen(false)}
+                                    onClick={() => {
+                                        setIsEditModalOpen(false);
+                                        setValidationErrors({});
+                                    }}
                                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
                                 >
                                     Cancel
