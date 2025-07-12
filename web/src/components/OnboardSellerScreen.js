@@ -104,7 +104,10 @@ const OnboardSeller = ({ isSidebarOpen }) => {
             const response = await registerBuyerOrSeller(role, formattedData);
             navigate("/sellers");
         } catch (error) {
-            alert("Error Occurred - not able to save");
+            alert(
+                "Error Occurred - not able to save: " +
+                    error.response.data.message
+            );
             console.error("Error during registration:", error);
         }
         // navigate("/buyers");

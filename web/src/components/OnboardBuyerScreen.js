@@ -157,9 +157,11 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
 
             console.log(formattedData);
             const response = await registerBuyerOrSeller(role, formattedData);
+            console.log(response);
             navigate("/buyers");
         } catch (error) {
-            alert("Error Occurred - not able to save");
+            console.log("catching error: ", error.response.data.message);
+            alert("Error during registration: " + error.response.data.message);
             console.error("Error during registration:", error);
         }
     };
