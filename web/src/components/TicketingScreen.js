@@ -30,7 +30,7 @@ const getStatusName = (status) => {
         case 'Deal_Cancel':
             return 'Rejected';
         default:
-            return 'bg-gray-100 text-gray-800';
+            return 'Open';
     }
 };
 
