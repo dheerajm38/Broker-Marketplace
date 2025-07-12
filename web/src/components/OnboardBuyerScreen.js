@@ -46,15 +46,41 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
         }
     };
 
+    const validateGST = (gst) => {
+        // GST format: 2 digits state code + 10 digits PAN + 1 digit entity number + 1 digit check digit + Z
+        const regex =
+            /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+        return regex.test(gst);
+    };
+
     const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        // Handle mobile number validation
+        if (name === "mobile") {
+            // Only allow digits and limit to 10 characters
+            const digitValue = value.replace(/\D/g, "").slice(0, 10);
+            setFormData({
+                ...formData,
+                [name]: digitValue,
+            });
+            return;
+        }
+
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value,
+            [name]: value,
         });
     };
 
     const handleGstChange = (e) => {
-        const value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+        let value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+        // Limit GST to 15 characters (Indian GST format)
+        if (value.length > 15) {
+            value = value.slice(0, 15);
+        }
+
         setFormData((prev) => ({
             ...prev,
             gst: value,
@@ -64,7 +90,7 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
     // Initialize form with buyer data if coming from notification
     useEffect(() => {
         if (buyerData) {
-            setFormData(prevData => ({
+            setFormData((prevData) => ({
                 ...prevData,
                 fullName: buyerData.fullName || "",
                 mobile: buyerData.mobile || "",
@@ -80,6 +106,18 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (formData.mobile.length !== 10) {
+            alert("Mobile number must be exactly 10 digits");
+            return;
+        }
+
+        // Validate GST
+        if (formData.gst && !validateGST(formData.gst)) {
+            alert(
+                "Please enter a valid GST number in the format: 22ABCDE1234F1Z5"
+            );
+            return;
+        }
         try {
             const role = "buyer";
             console.log(formData);
@@ -136,10 +174,11 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`px-4 py-2 rounded-md transition-colors ${activeTab === tab.id
-                                        ? "bg-white shadow-sm text-black"
-                                        : "text-gray-600 hover:text-gray-900"
-                                        }`}
+                                    className={`px-4 py-2 rounded-md transition-colors ${
+                                        activeTab === tab.id
+                                            ? "bg-white shadow-sm text-black"
+                                            : "text-gray-600 hover:text-gray-900"
+                                    }`}
                                 >
                                     {tab.label}
                                 </button>
@@ -179,9 +218,17 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
                                         value={formData.mobile}
                                         onChange={handleChange}
                                         placeholder="9876543210"
+                                        pattern="[0-9]{10}"
+                                        maxLength="10"
                                         className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                                         required
                                     />
+                                    {formData.mobile.length > 0 &&
+                                        formData.mobile.length < 10 && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                Mobile number must be 10 digits
+                                            </p>
+                                        )}
                                 </div>
                                 <div>
                                     <label className="text-sm font-medium text-gray-700">
@@ -207,9 +254,17 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
                                         value={formData.gst}
                                         onChange={handleGstChange}
                                         placeholder="22ABCDE1234F1Z5"
+                                        maxLength="15"
                                         className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                                         required
                                     />
+                                    {formData.gst.length > 0 &&
+                                        !validateGST(formData.gst) && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                Please enter a valid GST number
+                                                (15 characters)
+                                            </p>
+                                        )}
                                 </div>
 
                                 {/* Conditionally render Assigned Operator dropdown for Admin users */}

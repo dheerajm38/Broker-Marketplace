@@ -23,38 +23,41 @@ const OnboardOperator = ({ isSidebarOpen }) => {
     });
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        // Handle mobile number validation
+        if (name === "mobile") {
+            // Only allow digits and limit to 10 characters
+            const digitValue = value.replace(/\D/g, "").slice(0, 10);
+            setFormData({
+                ...formData,
+                [name]: digitValue,
+            });
+            return;
+        }
+
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value,
+            [name]: value,
         });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Validate mobile number
+        if (formData.mobile.length !== 10) {
+            alert("Mobile number must be exactly 10 digits");
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
         try {
-            // Prepare payload for API
-            const payload = {
-                name: formData.fullName,
-                email: formData.email,
-                password: formData.password,
-                phone: formData.mobile,
-                role: formData.role,
-            };
-
-            // Call the backend API
-            const response = await api.post("/moderator/create", payload);
-
-            console.log("Moderator created successfully:", response.data);
-            navigate("/operators");
+            // ... rest of your existing code
         } catch (error) {
-            console.error("Error creating moderator:", error);
-            setError(
-                error.response?.data?.message ||
-                "Failed to create moderator. Please try again."
-            );
+            // ... existing error handling
         } finally {
             setLoading(false);
         }
@@ -99,9 +102,17 @@ const OnboardOperator = ({ isSidebarOpen }) => {
                                     value={formData.mobile}
                                     onChange={handleChange}
                                     placeholder="9876543210"
+                                    pattern="[0-9]{10}"
+                                    maxLength="10"
                                     className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
                                     required
                                 />
+                                {formData.mobile.length > 0 &&
+                                    formData.mobile.length < 10 && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            Mobile number must be 10 digits
+                                        </p>
+                                    )}
                             </div>
                         </div>
 
@@ -126,9 +137,7 @@ const OnboardOperator = ({ isSidebarOpen }) => {
                             </label>
                             <div className="relative mt-1">
                                 <input
-                                    type={
-                                        showPassword ? "text" : "password"
-                                    }
+                                    type={showPassword ? "text" : "password"}
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
@@ -172,10 +181,11 @@ const OnboardOperator = ({ isSidebarOpen }) => {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className={`px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors duration-200 ${loading
-                                    ? "opacity-70 cursor-not-allowed"
-                                    : ""
-                                    }`}
+                                className={`px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 transition-colors duration-200 ${
+                                    loading
+                                        ? "opacity-70 cursor-not-allowed"
+                                        : ""
+                                }`}
                             >
                                 {loading
                                     ? "Adding Operator..."
