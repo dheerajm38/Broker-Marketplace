@@ -30,7 +30,7 @@ const getStatusName = (status) => {
         case 'Deal_Cancel':
             return 'Rejected';
         default:
-            return 'Open';
+            return status;
     }
 };
 

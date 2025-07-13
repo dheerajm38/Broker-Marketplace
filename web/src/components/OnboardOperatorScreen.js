@@ -55,9 +55,24 @@ const OnboardOperator = ({ isSidebarOpen }) => {
         setError(null);
 
         try {
-            // ... rest of your existing code
+           const payload = {
+                name: formData.fullName,
+                email: formData.email,
+                password: formData.password,
+                phone: formData.mobile,
+                role: formData.role,
+            };
+
+            const response = await api.post("/moderator/create", payload);
+
+            console.log("Moderator created successfully:", response.data);
+            navigate("/operators");
         } catch (error) {
-            // ... existing error handling
+            console.error("Error creating moderator:", error);
+            setError(
+                error.response?.data?.message ||
+                "Failed to create moderator. Please try again."
+            );
         } finally {
             setLoading(false);
         }
