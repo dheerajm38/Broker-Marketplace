@@ -104,8 +104,8 @@ const OnboardingRequestSchema = new dynamoose.Schema({
     "onboarding_status":{
         type: String,
         required: true,
-        enum: ["pending", "accept", "reject"],
-        default: "pending" // accept , reject 
+        enum: ["pending", "accepted", "rejected"],
+        default: "pending"
     },
     "fcm_token": {
         type: String,

@@ -20,7 +20,6 @@ export const fetchBuyerOrSellerDetails = async (role) => {
 
 export const registerBuyerOrSeller = async (role, data) => {
     try {
-        console.log("Data", data);
         const response = await api.post(`user/register`, data);
         console.log("RESPonse", response);
         return response.data;

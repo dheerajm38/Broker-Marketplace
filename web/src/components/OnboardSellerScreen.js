@@ -96,7 +96,7 @@ const OnboardSeller = ({ isSidebarOpen }) => {
                         zip_code: formData.zipCode,
                     },
                 },
-                role: role, // Set role (buyer or seller)
+                role: role, 
                 created_by: user.role, // Replace with the actual user who is creating this data
                 assigned_operator: "", // For seller, this has to be empty
             };

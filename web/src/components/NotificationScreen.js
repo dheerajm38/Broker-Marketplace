@@ -1,6 +1,15 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router";
-import { Bell, Ticket, UserPlus, ChevronRight, Clock } from "lucide-react";
+import {
+    Bell,
+    Ticket,
+    UserPlus,
+    ChevronRight,
+    Clock,
+    Check,
+    X,
+    AlertCircle,
+} from "lucide-react";
 import NavigationBar from "./NavigationBar";
 import Sidebar from "./Sidebar";
 import ContentWrapper from "./layout/ContentWrapper";
@@ -287,6 +296,7 @@ const NotificationContent = ({ isSidebarOpen }) => {
                                     getTimeAgo={getTimeAgo}
                                     onTicketClick={handleTicketClick}
                                     getNotificationIcon={getNotificationIcon}
+                                    refreshNotifications={fetchNotifications}
                                 />
                             ) : (
                                 <EmptyState />
@@ -385,6 +395,7 @@ const NotificationDetail = ({
     getTimeAgo,
     onTicketClick,
     getNotificationIcon,
+    refreshNotifications,
 }) => (
     <div className="p-6 bg-gray-50 rounded-lg shadow-sm border border-gray-200 min-h-[70vh]">
         <div className="flex items-center gap-3 mb-6">
@@ -395,7 +406,10 @@ const NotificationDetail = ({
         </div>
 
         {notification.type === "BUYER_REQUEST" ? (
-            <BuyerRequestDetail notification={notification} />
+            <BuyerRequestDetail
+                notification={notification}
+                refreshNotifications={refreshNotifications}
+            />
         ) : (
             <TicketDetail
                 notification={notification}
@@ -412,27 +426,122 @@ const NotificationDetail = ({
     </div>
 );
 
-const BuyerRequestDetail = ({ notification }) => {
-    const navigate = useNavigate();
+const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
+    const { user } = useAuth();
+    const [processing, setProcessing] = useState(false);
+    const [actionStatus, setActionStatus] = useState(null); // 'success', 'error', null
+    const [statusMessage, setStatusMessage] = useState("");
+    const [selectedOperator, setSelectedOperator] = useState("");
+    const [operators, setOperators] = useState([]);
+    const [loadingOperators, setLoadingOperators] = useState(false);
+
     const buyer = notification.message.buyer;
+    console.log(notification.message);
+    const requestId = notification.message.requestId;
 
-    const handleProcessRequest = () => {
-        const buyerData = {
-            fullName: buyer.personalDetails.fullName,
-            mobile: buyer.contactDetails.phoneNumber,
-            companyName: buyer.companyDetails.companyName,
-            gst: buyer.companyDetails.gstNumber,
-            street: buyer.companyDetails.companyAddress.street,
-            city: buyer.companyDetails.companyAddress.city,
-            state: buyer.companyDetails.companyAddress.state,
-            zipCode: buyer.companyDetails.companyAddress.zip_code,
-            requestId: notification.message.requestId,
-            requestType: notification.message.requestType,
-        };
+    const fetchOperators = async () => {
+        try {
+            setLoadingOperators(true);
+            const response = await api.get(`/moderator/role/Operator`);
+            console.log(response);
+            setOperators(response.data);
+        } catch (error) {
+            console.error("Error fetching operators:", error);
+            setOperators([]);
+        } finally {
+            setLoadingOperators(false);
+        }
+    };
 
-        navigate("/onboard-buyer", {
-            state: { buyerData, isFromNotification: true },
-        });
+    // Fetch operators when component mounts
+    useEffect(() => {
+        if (
+            user.role === "Admin" &&
+            notification.message.status === "pending"
+        ) {
+            fetchOperators();
+        }
+    }, [user.role, notification.message.status]);
+
+    const handleAcceptRequest = async () => {
+        try {
+            setProcessing(true);
+            setActionStatus(null);
+
+            const payload = {
+                decision: "accepted",
+                admin_id: user.userId,
+                assigned_operator: selectedOperator, // Pass selected operator ID
+            };
+            console.log("admin decision api to be called", payload);
+            console.log(`/onboarding/admin-decision/${requestId}`);
+            const response = await api.put(
+                `/onboarding/admin-decision/${requestId}`,
+                payload
+            );
+            console.log(response);
+
+            if (response.data.success) {
+                setActionStatus("success");
+                setStatusMessage("Buyer request accepted successfully");
+                // Refresh the notifications list after successful action
+                setTimeout(() => {
+                    refreshNotifications();
+                }, 2000);
+            } else {
+                setActionStatus("error");
+                setStatusMessage(
+                    response.data.message || "Failed to accept request"
+                );
+            }
+        } catch (error) {
+            setActionStatus("error");
+            setStatusMessage(
+                error.response?.data?.message || "Error processing request"
+            );
+            console.error("Error accepting buyer request:", error);
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const handleRejectRequest = async () => {
+        try {
+            setProcessing(true);
+            setActionStatus(null);
+
+            const payload = {
+                decision: "reject",
+                admin_id: user.user_id,
+            };
+
+            const response = await api.put(
+                `/onboarding/admin-decision/${requestId}`,
+                payload
+            );
+
+            if (response.data.success) {
+                setActionStatus("success");
+                setStatusMessage("Buyer request rejected successfully");
+                // Refresh the notifications list after successful action
+                setTimeout(() => {
+                    refreshNotifications();
+                }, 2000);
+            } else {
+                setActionStatus("error");
+                setStatusMessage(
+                    response.data.message || "Failed to reject request"
+                );
+            }
+        } catch (error) {
+            setActionStatus("error");
+            setStatusMessage(
+                error.response?.data?.message || "Error processing request"
+            );
+            console.error("Error rejecting buyer request:", error);
+        } finally {
+            setProcessing(false);
+        }
     };
 
     return (
@@ -480,16 +589,92 @@ const BuyerRequestDetail = ({ notification }) => {
                 />
             </div>
 
-            <div className="flex justify-center mt-6">
-                <button
-                    onClick={handleProcessRequest}
-                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
-                             transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+            {user.role === "Admin" &&
+                notification.message.status === "pending" && (
+                    <>
+                        <div className="mt-6">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Assign Operator (Optional)
+                            </label>
+                            {loadingOperators ? (
+                                <div className="flex items-center justify-center p-2 border border-gray-300 rounded-md">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                    <span className="ml-2 text-sm text-gray-500">
+                                        Loading operators...
+                                    </span>
+                                </div>
+                            ) : (
+                                <select
+                                    value={selectedOperator}
+                                    onChange={(e) =>
+                                        setSelectedOperator(e.target.value)
+                                    }
+                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                >
+                                    <option value="">Select an operator</option>
+                                    {operators.map((operator) => (
+                                        <option
+                                            key={operator.moderator_id}
+                                            value={operator.moderator_id}
+                                        >
+                                            {operator.name ||
+                                                operator.email ||
+                                                operator.moderator_id}
+                                        </option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
+
+                        <div className="flex justify-center gap-4 mt-6">
+                            <button
+                                onClick={handleAcceptRequest}
+                                disabled={processing}
+                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 
+                                    transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                            >
+                                <Check className="h-5 w-5" />
+                                Accept Request
+                            </button>
+
+                            <button
+                                onClick={handleRejectRequest}
+                                disabled={processing}
+                                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 
+                                    transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                            >
+                                <X className="h-5 w-5" />
+                                Reject Request
+                            </button>
+                        </div>
+                    </>
+                )}
+
+            {/* Status message display */}
+            {actionStatus && (
+                <div
+                    className={`mt-4 p-3 rounded-md ${
+                        actionStatus === "success"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-red-100 text-red-800"
+                    }`}
                 >
-                    <UserPlus className="h-5 w-5" />
-                    Process Further
-                </button>
-            </div>
+                    <div className="flex items-center gap-2">
+                        {actionStatus === "success" ? (
+                            <Check className="h-5 w-5" />
+                        ) : (
+                            <AlertCircle className="h-5 w-5" />
+                        )}
+                        {statusMessage}
+                    </div>
+                </div>
+            )}
+
+            {processing && (
+                <div className="flex justify-center mt-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                </div>
+            )}
         </div>
     );
 };
