@@ -510,9 +510,10 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
             setProcessing(true);
             setActionStatus(null);
 
+            console.log("USER", user);
             const payload = {
-                decision: "reject",
-                admin_id: user.user_id,
+                decision: "rejected",
+                admin_id: user.userId,
             };
 
             const response = await api.put(
