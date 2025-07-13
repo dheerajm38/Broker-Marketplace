@@ -667,12 +667,13 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
     console.log("This does not get printed");
     try {
         const { onboarding_request_id } = req.params;
-        const { decision, admin_id, assigned_operator } = req.body;
+        const { decision, admin_id, assigned_operator, notification_id } = req.body;
         console.log(
             onboarding_request_id,
             decision,
             admin_id,
-            assigned_operator
+            assigned_operator,
+            notification_id
         );
         // Validate input
         if (!onboarding_request_id || !decision || !admin_id) {
@@ -712,7 +713,7 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
         }
         console.log(decision);
         // If decision is reject, just update the status
-        if (decision.toLowerCase() === "reject") {
+        if (decision.toLowerCase() === "rejected") {
             await OnboardingRequest.update(
                 { onboarding_request_id },
                 {
@@ -794,6 +795,15 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                     user_id: newUser.user_id, // Reference to created user
                 }
             );
+
+            //update notification
+
+            await Notification.update(
+                {id:notification_id}, 
+                {
+                    "message.status":decision
+                }
+            )
 
             return res.status(200).json({
                 success: true,

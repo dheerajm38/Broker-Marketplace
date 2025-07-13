@@ -467,11 +467,13 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
         try {
             setProcessing(true);
             setActionStatus(null);
-
+    
+            console.log('Notification', notification);
             const payload = {
                 decision: "accepted",
                 admin_id: user.userId,
                 assigned_operator: selectedOperator, // Pass selected operator ID
+                notification_id: notification.id
             };
             console.log("admin decision api to be called", payload);
             console.log(`/onboarding/admin-decision/${requestId}`);
@@ -509,11 +511,12 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
         try {
             setProcessing(true);
             setActionStatus(null);
-
+            console.log('Notification', notification);
             console.log("USER", user);
             const payload = {
                 decision: "rejected",
                 admin_id: user.userId,
+                notification_id: notification.id
             };
 
             const response = await api.put(
