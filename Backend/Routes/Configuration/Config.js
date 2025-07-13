@@ -1,5 +1,5 @@
 import express from "express";
-import { User, OnboardingRequest } from "../../Model/Models.js";
+import { User, OnboardingRequest, Moderator } from "../../Model/Models.js";
 import { generateUserAccessToken, generateUserRefreshToken } from "../../Utils/AuthUtils.js";
 const router = express.Router();
 
@@ -28,6 +28,11 @@ router.post("/basic-info", async (req, res) => {
             case "accepted":
                 {
                     const user = await User.scan("contact_details.phone_number").eq(phone_number).exec();
+                    const operator = await Moderator.scan("moderator_id").eq(user.assigned_operator).exec();
+
+                    if(!operator) {
+                        return res.status(404).json({ message: "Operator not found" });
+                    }
                     if (!user) {
                         return res.status(404).json({ message: "User not found" });
                     }
@@ -46,7 +51,7 @@ router.post("/basic-info", async (req, res) => {
                         refreshToken: refreshToken,
                         operator_id:user[0]?.assigned_operator,
                         user_id:user[0]?.user_id,
-                        operatorPhoneNo:'8141211898'
+                        operatorPhoneNo: operator.phone_number
                      });
                 }
             case "rejected":

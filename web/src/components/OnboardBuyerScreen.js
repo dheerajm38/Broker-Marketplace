@@ -37,7 +37,6 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
 
     const fetchOperators = async () => {
         try {
-            //const roleToBeFetched = 'Operator'
             const response = await api.get(`/moderator/role/Operator`);
             console.log(response);
             setOperators(response.data);
@@ -120,12 +119,10 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
         }
         try {
             const role = "buyer";
-            console.log(formData);
 
             const formattedData = {
                 personal_details: {
                     fullName: formData.fullName,
-                    // You can add other fields like date_of_birth and pan_number if necessary
                 },
                 contact_details: {
                     phone_number: formData.mobile, // or pan_number if required
@@ -142,27 +139,24 @@ const OnboardBuyer = ({ isSidebarOpen }) => {
                     },
                 },
                 role: role, // Set role (buyer or seller)
-                created_by: user.role, // Replace with the actual user who is creating this data
+                created_by: user.role, 
                 assigned_operator:
                     user.role === "Admin"
                         ? formData.assignedOperator
                         : user.userId, // Use selected operator if admin, otherwise use current user
             };
 
-            // Add request details if coming from notification
+
             if (buyerData?.requestId) {
                 formattedData.request_id = buyerData.requestId;
                 formattedData.request_type = buyerData.requestType;
             }
 
-            console.log(formattedData);
             const response = await registerBuyerOrSeller(role, formattedData);
-            console.log(response);
+
             navigate("/buyers");
         } catch (error) {
-            console.log("catching error: ", error.response.data.message);
             alert("Error during registration: " + error.response.data.message);
-            console.error("Error during registration:", error);
         }
     };
 

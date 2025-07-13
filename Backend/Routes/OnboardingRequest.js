@@ -164,7 +164,7 @@ export const onboardBuyer = async (req, res) => {
         }
 
         // Validate onboarding status
-        const validStatus = ["pending", "accept", "reject"];
+        const validStatus = ["pending", "accepted", "rejected"];
         const status = onboarding_status?.toLowerCase() || "pending";
         if (!validStatus.includes(status)) {
             return res.status(400).json({
@@ -359,7 +359,7 @@ const validateUpdateData = (updateData, existingData) => {
 
     // Validate onboarding status if provided
     if (updateData.onboarding_status) {
-        const validStatus = ["pending", "accept", "reject"];
+        const validStatus = ["pending", "accepted", "rejected"];
         if (!validStatus.includes(updateData.onboarding_status.toLowerCase())) {
             errors.push("Invalid onboarding status");
         }
@@ -683,11 +683,11 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
             });
         }
 
-        if (!["accept", "reject"].includes(decision.toLowerCase())) {
+        if (!["accepted", "rejected"].includes(decision.toLowerCase())) {
             return res.status(400).json({
                 success: false,
                 message:
-                    "Invalid decision. Must be either 'accept' or 'reject'",
+                    "Invalid decision. Must be either 'accepted' or 'rejected'",
             });
         }
 
@@ -729,7 +729,7 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
         }
 
         // If decision is accept, create new user and update onboarding status
-        if (decision.toLowerCase() === "accept") {
+        if (decision.toLowerCase() === "accepted") {
             // Check if user with same phone number and role already exists
             const existingUser = await User.scan("contact_details.phone_number")
                 .eq(onboardingRequest.contact_details.phone_number)
@@ -739,7 +739,6 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                 .exec();
 
             if (existingUser.count > 0) {
-                console.log("Bruhh");
                 return res.status(400).json({
                     success: false,
                     message: `User with phone number ${onboardingRequest.contact_details.phone_number} is already registered as a ${onboardingRequest.role}`,
@@ -755,7 +754,7 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                 role: onboardingRequest.role,
                 created_by: admin_id,
                 assigned_operator: assigned_operator || "",
-                status: "accept", // New field to track user status
+                status: "accepted", // New field to track user status
                 fcm_token: onboardingRequest.fcm_token || "", // Transfer FCM token
             };
 
@@ -788,7 +787,7 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
             await OnboardingRequest.update(
                 { onboarding_request_id },
                 {
-                    onboarding_status: "accept",
+                    onboarding_status: "accepted",
                     acceptance_date: new Date().toISOString(),
                     accepted_by: admin_id,
                     assigned_operator: assigned_operator || "",

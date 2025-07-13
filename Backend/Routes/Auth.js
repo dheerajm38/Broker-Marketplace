@@ -398,6 +398,7 @@ router.post("/verifyOTP/user", async (req, res) => {
         };
         const response = await axios(config);
 
+        // if otp verification is false dont return 200
         return res.status(200).json(apiResponse(200, "OTP verified successfully"));
 
     } catch (error) {
