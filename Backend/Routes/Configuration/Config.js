@@ -28,17 +28,19 @@ router.post("/basic-info", async (req, res) => {
             case "accepted":
                 {
                     const user = await User.scan("contact_details.phone_number").eq(phone_number).exec();
-                    const operator = await Moderator.scan("moderator_id").eq(user.assigned_operator).exec();
-
-                    if(!operator) {
-                        return res.status(404).json({ message: "Operator not found" });
-                    }
                     if (!user) {
                         return res.status(404).json({ message: "User not found" });
                     }
                     if(user.count > 1) {
                         return res.status(404).json({ message: "Multiple User Found" });
                     }
+                    const operator = await Moderator.scan("moderator_id").eq(user[0].assigned_operator).exec();
+
+                    if(!operator) {
+                        return res.status(404).json({ message: "Operator not found" });
+                    }
+
+
                     console.log("USER:", user);
                     const accessToken = generateUserAccessToken(user[0]);
                     const refreshToken = generateUserRefreshToken(user[0]);
