@@ -423,8 +423,9 @@ const NotificationDetail = ({
 const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
     const { user } = useAuth();
     const [processing, setProcessing] = useState(false);
-    const [actionStatus, setActionStatus] = useState(null); // 'success', 'error', null
-    const [statusMessage, setStatusMessage] = useState("");
+    // Per-notification status and message
+    const [actionStatusMap, setActionStatusMap] = useState({});
+    const [statusMessageMap, setStatusMessageMap] = useState({});
     const [selectedOperator, setSelectedOperator] = useState("");
     const [operators, setOperators] = useState([]);
     const [loadingOperators, setLoadingOperators] = useState(false);
@@ -459,9 +460,17 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
     }, [user.role, notification.message.status]);
 
     const handleAcceptRequest = async () => {
+        // If no operator is selected, do not proceed further
+        if (!selectedOperator) {
+            setActionStatusMap((prev) => ({ ...prev, [notification.id]: "error" }));
+            setStatusMessageMap((prev) => ({ ...prev, [notification.id]: "Please select an operator before accepting the request." }));
+            return;
+        }
         try {
             setProcessing(true);
-            setActionStatus(null);
+            // Clear previous status for this notification
+            setActionStatusMap((prev) => ({ ...prev, [notification.id]: null }));
+            setStatusMessageMap((prev) => ({ ...prev, [notification.id]: "" }));
 
             console.log('Notification', notification);
             const payload = {
@@ -479,23 +488,19 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
             console.log(response);
 
             if (response.data.success) {
-                setActionStatus("success");
-                setStatusMessage("Buyer request accepted successfully");
+                setActionStatusMap((prev) => ({ ...prev, [notification.id]: "success" }));
+                setStatusMessageMap((prev) => ({ ...prev, [notification.id]: "Buyer request accepted successfully" }));
                 // Refresh the notifications list after successful action
                 setTimeout(() => {
                     refreshNotifications();
                 }, 2000);
             } else {
-                setActionStatus("error");
-                setStatusMessage(
-                    response.data.message || "Failed to accept request"
-                );
+                setActionStatusMap((prev) => ({ ...prev, [notification.id]: "error" }));
+                setStatusMessageMap((prev) => ({ ...prev, [notification.id]: response.data.message || "Failed to accept request" }));
             }
         } catch (error) {
-            setActionStatus("error");
-            setStatusMessage(
-                error.response?.data?.message || "Error processing request"
-            );
+            setActionStatusMap((prev) => ({ ...prev, [notification.id]: "error" }));
+            setStatusMessageMap((prev) => ({ ...prev, [notification.id]: error.response?.data?.message || "Error processing request" }));
             console.error("Error accepting buyer request:", error);
         } finally {
             setProcessing(false);
@@ -505,7 +510,8 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
     const handleRejectRequest = async () => {
         try {
             setProcessing(true);
-            setActionStatus(null);
+            setActionStatusMap((prev) => ({ ...prev, [notification.id]: null }));
+            setStatusMessageMap((prev) => ({ ...prev, [notification.id]: "" }));
             console.log('Notification', notification);
             console.log("USER", user);
             const payload = {
@@ -520,23 +526,19 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
             );
 
             if (response.data.success) {
-                setActionStatus("success");
-                setStatusMessage("Buyer request rejected successfully");
+                setActionStatusMap((prev) => ({ ...prev, [notification.id]: "success" }));
+                setStatusMessageMap((prev) => ({ ...prev, [notification.id]: "Buyer request rejected successfully" }));
                 // Refresh the notifications list after successful action
                 setTimeout(() => {
                     refreshNotifications();
                 }, 2000);
             } else {
-                setActionStatus("error");
-                setStatusMessage(
-                    response.data.message || "Failed to reject request"
-                );
+                setActionStatusMap((prev) => ({ ...prev, [notification.id]: "error" }));
+                setStatusMessageMap((prev) => ({ ...prev, [notification.id]: response.data.message || "Failed to reject request" }));
             }
         } catch (error) {
-            setActionStatus("error");
-            setStatusMessage(
-                error.response?.data?.message || "Error processing request"
-            );
+            setActionStatusMap((prev) => ({ ...prev, [notification.id]: "error" }));
+            setStatusMessageMap((prev) => ({ ...prev, [notification.id]: error.response?.data?.message || "Error processing request" }));
             console.error("Error rejecting buyer request:", error);
         } finally {
             setProcessing(false);
@@ -658,20 +660,20 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
             )}
 
             {/* Status message display */}
-            {actionStatus && (
+            {actionStatusMap[notification.id] && (
                 <div
-                    className={`mt-4 p-3 rounded-md ${actionStatus === "success"
+                    className={`mt-4 p-3 rounded-md ${actionStatusMap[notification.id] === "success"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
                         }`}
                 >
                     <div className="flex items-center gap-2">
-                        {actionStatus === "success" ? (
+                        {actionStatusMap[notification.id] === "success" ? (
                             <Check className="h-5 w-5" />
                         ) : (
                             <AlertCircle className="h-5 w-5" />
                         )}
-                        {statusMessage}
+                        {statusMessageMap[notification.id]}
                     </div>
                 </div>
             )}
