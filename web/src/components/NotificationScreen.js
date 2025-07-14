@@ -244,17 +244,16 @@ const NotificationContent = ({ isSidebarOpen }) => {
                                                     onClick={() =>
                                                         handlePageChange(
                                                             pagination.current_page -
-                                                                1
+                                                            1
                                                         )
                                                     }
                                                     disabled={
                                                         !pagination.has_previous
                                                     }
-                                                    className={`px-3 py-1 rounded ${
-                                                        !pagination.has_previous
+                                                    className={`px-3 py-1 rounded ${!pagination.has_previous
                                                             ? "bg-gray-100 text-gray-400"
                                                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     Previous
                                                 </button>
@@ -267,17 +266,16 @@ const NotificationContent = ({ isSidebarOpen }) => {
                                                     onClick={() =>
                                                         handlePageChange(
                                                             pagination.current_page +
-                                                                1
+                                                            1
                                                         )
                                                     }
                                                     disabled={
                                                         !pagination.has_next
                                                     }
-                                                    className={`px-3 py-1 rounded ${
-                                                        !pagination.has_next
+                                                    className={`px-3 py-1 rounded ${!pagination.has_next
                                                             ? "bg-gray-100 text-gray-400"
                                                             : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                                                    }`}
+                                                        }`}
                                                 >
                                                     Next
                                                 </button>
@@ -313,11 +311,10 @@ const NotificationContent = ({ isSidebarOpen }) => {
 const FilterButton = ({ active, children, onClick }) => (
     <button
         onClick={onClick}
-        className={`px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${
-            active
+        className={`px-3 py-1.5 text-sm rounded-md transition-all duration-200 ${active
                 ? "bg-blue-500 text-white shadow-sm"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-        }`}
+            }`}
     >
         {children}
     </button>
@@ -343,10 +340,9 @@ const NotificationCard = ({
         <button
             onClick={onClick}
             className={`block w-full text-left p-4 rounded-lg transition-all duration-200 relative
-                ${
-                    isSelected
-                        ? "bg-white border border-gray-200 shadow-md"
-                        : "bg-transparent hover:bg-gray-50"
+                ${isSelected
+                    ? "bg-white border border-gray-200 shadow-md"
+                    : "bg-transparent hover:bg-gray-50"
                 }
                 ${!notification.isRead ? "pl-6" : "pl-4"}
             `}
@@ -356,20 +352,18 @@ const NotificationCard = ({
             )}
             <div className="flex gap-3">
                 <div
-                    className={`flex-shrink-0 rounded-full p-2 ${
-                        notification.type === "BUYER_REQUEST"
+                    className={`flex-shrink-0 rounded-full p-2 ${notification.type === "BUYER_REQUEST"
                             ? "bg-blue-50"
                             : "bg-green-50"
-                    }`}
+                        }`}
                 >
                     {getNotificationIcon(notification.type)}
                 </div>
                 <div className="flex-1">
                     <div className="flex justify-between items-start">
                         <p
-                            className={`font-medium line-clamp-1 ${
-                                isSelected ? "text-blue-600" : "text-gray-800"
-                            }`}
+                            className={`font-medium line-clamp-1 ${isSelected ? "text-blue-600" : "text-gray-800"
+                                }`}
                         >
                             {notification.title}
                         </p>
@@ -438,6 +432,7 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
     const buyer = notification.message.buyer;
     console.log(notification.message);
     const requestId = notification.message.requestId;
+    const requestStatus = notification.message.status;
 
     const fetchOperators = async () => {
         try {
@@ -467,7 +462,7 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
         try {
             setProcessing(true);
             setActionStatus(null);
-    
+
             console.log('Notification', notification);
             const payload = {
                 decision: "accepted",
@@ -593,75 +588,82 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
                 />
             </div>
 
-            {user.role === "Admin" &&
-                notification.message.status === "pending" && (
-                    <>
-                        <div className="mt-6">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Assign Operator (Optional)
-                            </label>
-                            {loadingOperators ? (
-                                <div className="flex items-center justify-center p-2 border border-gray-300 rounded-md">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-                                    <span className="ml-2 text-sm text-gray-500">
-                                        Loading operators...
-                                    </span>
-                                </div>
-                            ) : (
-                                <select
-                                    value={selectedOperator}
-                                    onChange={(e) =>
-                                        setSelectedOperator(e.target.value)
-                                    }
-                                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            {user.role === "Admin" && (
+                <>
+                    {requestStatus === "pending" ? (
+                        <>
+                            <div className="mt-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Assign Operator (Optional)
+                                </label>
+                                {loadingOperators ? (
+                                    <div className="flex items-center justify-center p-2 border border-gray-300 rounded-md">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                                        <span className="ml-2 text-sm text-gray-500">
+                                            Loading operators...
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <select
+                                        value={selectedOperator}
+                                        onChange={(e) => setSelectedOperator(e.target.value)}
+                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">Select an operator</option>
+                                        {operators.map((operator) => (
+                                            <option
+                                                key={operator.moderator_id}
+                                                value={operator.moderator_id}
+                                            >
+                                                {operator.name || operator.email || operator.moderator_id}
+                                            </option>
+                                        ))}
+                                    </select>
+                                )}
+                            </div>
+
+                            <div className="flex justify-center gap-4 mt-6">
+                                <button
+                                    onClick={handleAcceptRequest}
+                                    disabled={processing}
+                                    className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 
+                                        transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
                                 >
-                                    <option value="">Select an operator</option>
-                                    {operators.map((operator) => (
-                                        <option
-                                            key={operator.moderator_id}
-                                            value={operator.moderator_id}
-                                        >
-                                            {operator.name ||
-                                                operator.email ||
-                                                operator.moderator_id}
-                                        </option>
-                                    ))}
-                                </select>
-                            )}
-                        </div>
+                                    <Check className="h-5 w-5" />
+                                    Accept Request
+                                </button>
 
-                        <div className="flex justify-center gap-4 mt-6">
-                            <button
-                                onClick={handleAcceptRequest}
-                                disabled={processing}
-                                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 
-                                    transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
-                            >
-                                <Check className="h-5 w-5" />
-                                Accept Request
-                            </button>
-
-                            <button
-                                onClick={handleRejectRequest}
-                                disabled={processing}
-                                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 
-                                    transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
-                            >
-                                <X className="h-5 w-5" />
-                                Reject Request
-                            </button>
+                                <button
+                                    onClick={handleRejectRequest}
+                                    disabled={processing}
+                                    className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 
+                                        transition-colors duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                                >
+                                    <X className="h-5 w-5" />
+                                    Reject Request
+                                </button>
+                            </div>
+                        </>
+                    ) : (
+                        <div className="mt-6 p-4 bg-gray-100 rounded-lg border border-gray-200">
+                            <div className="flex items-center justify-center gap-2 text-gray-700">
+                                <AlertCircle className="h-5 w-5" />
+                                <span>
+                                    This request has already been {requestStatus.toLowerCase()}
+                                </span>
+                            </div>
                         </div>
-                    </>
-                )}
+                    )}
+                </>
+            )}
 
             {/* Status message display */}
             {actionStatus && (
                 <div
-                    className={`mt-4 p-3 rounded-md ${
-                        actionStatus === "success"
+                    className={`mt-4 p-3 rounded-md ${actionStatus === "success"
                             ? "bg-green-100 text-green-800"
                             : "bg-red-100 text-red-800"
-                    }`}
+                        }`}
                 >
                     <div className="flex items-center gap-2">
                         {actionStatus === "success" ? (

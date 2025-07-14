@@ -256,7 +256,7 @@ export const updateBuyer = async (req, res) => {
         if (
             sanitizedData.contact_details?.phone_number &&
             sanitizedData.contact_details.phone_number !==
-                existingBuyer.contact_details?.phone_number
+            existingBuyer.contact_details?.phone_number
         ) {
             const duplicatePhone = await OnboardingRequest.scan(
                 "contact_details.phone_number"
@@ -400,9 +400,9 @@ const prepareUpdateFields = (updateData, existingData) => {
             ...updateData.company_details,
             company_address: updateData.company_details.company_address
                 ? {
-                      ...(existingData.company_details?.company_address || {}),
-                      ...updateData.company_details.company_address,
-                  }
+                    ...(existingData.company_details?.company_address || {}),
+                    ...updateData.company_details.company_address,
+                }
                 : existingData.company_details?.company_address,
         };
     }
@@ -664,17 +664,11 @@ export const getBuyerStatistics = async (req, res) => {
 
 // Admin decision endpoint for onboarding requests
 router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
-    console.log("This does not get printed");
     try {
+        console.log('Processing admin decision for onboarding request with decision sent as: ', decision);
         const { onboarding_request_id } = req.params;
         const { decision, admin_id, assigned_operator, notification_id } = req.body;
-        console.log(
-            onboarding_request_id,
-            decision,
-            admin_id,
-            assigned_operator,
-            notification_id
-        );
+
         // Validate input
         if (!onboarding_request_id || !decision || !admin_id) {
             return res.status(400).json({
@@ -723,10 +717,9 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                 }
             );
 
-            return res.status(200).json({
-                success: true,
-                message: "Onboarding request rejected successfully",
-            });
+            // here
+
+
         }
 
         // If decision is accept, create new user and update onboarding status
@@ -796,22 +789,41 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                 }
             );
 
-            //update notification
+            //here 
 
-            await Notification.update(
-                {id:notification_id}, 
-                {
-                    "message.status":decision
-                }
-            )
 
-            return res.status(200).json({
-                success: true,
-                message:
-                    "Onboarding request accepted and user created successfully",
-                data: newUser,
-            });
         }
+
+        // Update notification status with 'decision' as the new status
+        if (notification_id) {
+            try {
+                const notification = await Notification.get(notification_id);
+
+                await Notification.update(
+                    { id: notification_id },
+                    {
+                        message: {
+                            ...notification.message,
+                            status: decision.toLowerCase(),
+                        },
+                    }
+                );
+
+                console.log(`Notification ${notification_id} updated with ${decision.toLowerCase()} status`);
+            } catch (notificationError) {
+                console.error("Error updating notification status:", notificationError);
+                // Don't throw error as the main operation succeeded
+            }
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: decision === "accepted"
+                ? "Onboarding request accepted and user created successfully"
+                : "Onboarding request rejected successfully",
+            ...(decision === "accepted" && { data: newUser }),
+        });
+
     } catch (error) {
         console.error("Error processing admin decision:", error);
         return res.status(500).json({
