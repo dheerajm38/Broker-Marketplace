@@ -21,10 +21,15 @@ export const apiResponse = ( statusCode, message) => {
                 "status" : "error",
                 "message" : message!= null ? message : "Invalid request",
             }
+        case 501 :
+            return {
+                "status" : "Invalid",
+                "message" : message!= null ? message : "Invalid request",
+            }
         default :
             return {
                 "status" : "error",
-                "message" : "Internal server error",
+                "message" : message!=null ? message : "Internal server error",
             }
     }
 }
