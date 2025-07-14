@@ -470,8 +470,9 @@ const BuyerRequestDetail = ({ notification, refreshNotifications }) => {
                 assigned_operator: selectedOperator, // Pass selected operator ID
                 notification_id: notification.id
             };
-            console.log("admin decision api to be called", payload);
-            console.log(`/onboarding/admin-decision/${requestId}`);
+
+            
+
             const response = await api.put(
                 `/onboarding/admin-decision/${requestId}`,
                 payload

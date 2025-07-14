@@ -748,7 +748,6 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                 role: onboardingRequest.role,
                 created_by: admin_id,
                 assigned_operator: assigned_operator || "",
-                status: "accepted", // New field to track user status
                 fcm_token: onboardingRequest.fcm_token || "", // Transfer FCM token
             };
 
@@ -821,7 +820,6 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
             message: decision === "accepted"
                 ? "Onboarding request accepted and user created successfully"
                 : "Onboarding request rejected successfully",
-            ...(decision === "accepted" && { data: newUser }),
         });
 
     } catch (error) {
