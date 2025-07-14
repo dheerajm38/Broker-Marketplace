@@ -665,9 +665,9 @@ export const getBuyerStatistics = async (req, res) => {
 // Admin decision endpoint for onboarding requests
 router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
     try {
-        console.log('Processing admin decision for onboarding request with decision sent as: ', decision);
         const { onboarding_request_id } = req.params;
         const { decision, admin_id, assigned_operator, notification_id } = req.body;
+        console.log('Processing admin decision for onboarding request with decision sent as: ', decision);
 
         // Validate input
         if (!onboarding_request_id || !decision || !admin_id) {
@@ -716,10 +716,6 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                     rejected_by: admin_id,
                 }
             );
-
-            // here
-
-
         }
 
         // If decision is accept, create new user and update onboarding status
@@ -748,7 +744,6 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                 role: onboardingRequest.role,
                 created_by: admin_id,
                 assigned_operator: assigned_operator || "",
-                status: "accepted", // New field to track user status
                 fcm_token: onboardingRequest.fcm_token || "", // Transfer FCM token
             };
 
@@ -788,10 +783,6 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
                     user_id: newUser.user_id, // Reference to created user
                 }
             );
-
-            //here 
-
-
         }
 
         // Update notification status with 'decision' as the new status
@@ -820,8 +811,7 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
             success: true,
             message: decision === "accepted"
                 ? "Onboarding request accepted and user created successfully"
-                : "Onboarding request rejected successfully",
-            ...(decision === "accepted" && { data: newUser }),
+                : "Onboarding request rejected successfully"
         });
 
     } catch (error) {
