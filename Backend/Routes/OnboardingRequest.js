@@ -819,7 +819,7 @@ router.put("/admin-decision/:onboarding_request_id", async (req, res) => {
             success: true,
             message: decision === "accepted"
                 ? "Onboarding request accepted and user created successfully"
-                : "Onboarding request rejected successfully",
+                : "Onboarding request rejected successfully"
         });
 
     } catch (error) {
