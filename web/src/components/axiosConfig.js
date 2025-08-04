@@ -2,9 +2,9 @@ import axios from "axios";
 
 const getRefreshToken = () => localStorage.getItem("refreshToken");
 
-// Custom axios instance    
+// Custom axios instance
 export const api = axios.create({
-    baseURL: 'https://api.dhirajmittal.com',
+    baseURL: "http://localhost:8000",
     withCredentials: true, // Important for cookies
 });
 

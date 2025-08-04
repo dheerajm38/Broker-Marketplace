@@ -237,6 +237,14 @@ const validateUpdateFields = (updateData) => {
         });
     }
 
+    // Add validation for assigned_operator
+    if (updateData.assigned_operator !== undefined) {
+        if (typeof updateData.assigned_operator !== "string") {
+            errors.push("assigned_operator must be a string");
+        }
+        // You can add additional validation here, like checking if the operator exists
+    }
+
     // Check contact_details
     if (updateData.contact_details) {
         Object.keys(updateData.contact_details).forEach((field) => {
@@ -496,10 +504,42 @@ router.get("/", async (req, res) => {
     }
 });
 
+// router.get("/role/:role", async (req, res) => {
+//     try {
+//         const { role } = req.params;
+//         console.log("Role", req.user);
+//         // Validate role
+//         if (!["buyer", "seller"].includes(role)) {
+//             return res.status(400).json({
+//                 success: false,
+//                 message:
+//                     "Invalid role. Role must be either 'buyer' or 'seller'",
+//             });
+//         }
+
+//         // Fetch users with the given role
+//         const users = await User.scan("role").eq(role).exec();
+
+//         return res.status(200).json({
+//             success: true,
+//             message: `Users with role '${role}' retrieved successfully`,
+//             data: users,
+//         });
+//     } catch (error) {
+//         console.error("Error fetching users by role:", error);
+//         return res.status(500).json({
+//             success: false,
+//             message: "Internal Server Error",
+//             error: error.message,
+//         });
+//     }
+// });
+
 router.get("/role/:role", async (req, res) => {
     try {
         const { role } = req.params;
         console.log("Role", req.user);
+
         // Validate role
         if (!["buyer", "seller"].includes(role)) {
             return res.status(400).json({
@@ -512,10 +552,92 @@ router.get("/role/:role", async (req, res) => {
         // Fetch users with the given role
         const users = await User.scan("role").eq(role).exec();
 
+        // Get all unique operator IDs from users who have assigned operators
+        const operatorIds = [
+            ...new Set(
+                users
+                    .filter(
+                        (user) =>
+                            user.assigned_operator &&
+                            user.assigned_operator.trim() !== ""
+                    )
+                    .map((user) => user.assigned_operator)
+            ),
+        ];
+
+        // Fetch operator details if there are any operators to fetch
+        let operators = [];
+        if (operatorIds.length > 0) {
+            // Fetch all operators in parallel
+            const operatorPromises = operatorIds.map((operatorId) =>
+                Moderator.get({ moderator_id: operatorId }).catch((err) => {
+                    console.warn(
+                        `Operator with ID ${operatorId} not found:`,
+                        err
+                    );
+                    return null; // Return null for non-existent operators
+                })
+            );
+
+            const operatorResults = await Promise.all(operatorPromises);
+            operators = operatorResults.filter((operator) => operator !== null);
+        }
+
+        // Create a map of operator ID to operator details for quick lookup
+        const operatorMap = operators.reduce((map, operator) => {
+            map[operator.moderator_id] = {
+                moderator_id: operator.moderator_id,
+                name: operator.name,
+                email: operator.email,
+                phone_number: operator.phone_number,
+                role: operator.role,
+            };
+            return map;
+        }, {});
+
+        // Enhance users with operator details
+        const usersWithOperators = users.map((user) => {
+            const userObj = {
+                ...user,
+                assigned_operator_details: null,
+            };
+
+            // If user has an assigned operator, add the operator details
+            if (
+                user.assigned_operator &&
+                user.assigned_operator.trim() !== ""
+            ) {
+                const operatorDetails = operatorMap[user.assigned_operator];
+                if (operatorDetails) {
+                    userObj.assigned_operator_details = operatorDetails;
+                } else {
+                    // Operator ID exists but operator not found in database
+                    console.warn(
+                        `Operator with ID ${user.assigned_operator} not found for user ${user.user_id}`
+                    );
+                    userObj.assigned_operator_details = {
+                        error: "Operator not found",
+                        operator_id: user.assigned_operator,
+                    };
+                }
+            }
+
+            return userObj;
+        });
+
         return res.status(200).json({
             success: true,
-            message: `Users with role '${role}' retrieved successfully`,
-            data: users,
+            message: `Users with role '${role}' and their assigned operators retrieved successfully`,
+            data: usersWithOperators,
+            summary: {
+                total_users: users.length,
+                users_with_operators: users.filter(
+                    (user) =>
+                        user.assigned_operator &&
+                        user.assigned_operator.trim() !== ""
+                ).length,
+                operators_found: operators.length,
+            },
         });
     } catch (error) {
         console.error("Error fetching users by role:", error);
