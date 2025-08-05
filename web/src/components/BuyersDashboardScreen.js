@@ -23,22 +23,47 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
     const [editingBuyer, setEditingBuyer] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [operators, setOperators] = useState([]);
 
     useEffect(() => {
+        const fetchOperators = async () => {
+            try {
+                const response = await api.get("/moderator/role/Operator"); // Assuming you have this endpoint
+                debugger;
+                setOperators(response.data || []);
+            } catch (err) {
+                console.error("Error fetching operators:", err);
+            }
+        };
         const fetchBuyers = async () => {
             try {
-                const response = await api.get("/user/role/buyer"); // Use axios GET method
+                const response = await api.get("/user/role/buyer");
                 console.log(response);
                 const data = response.data;
                 console.log(data);
                 console.log(typeof data);
-                // Transform the data to match the expected format
+
+                // Transform the data to include operator information
                 const transformedData = data.data.map((buyer) => ({
                     id: buyer.user_id,
                     name: buyer.personal_details.fullName,
                     mobile: buyer.contact_details.phone_number,
                     company: buyer.company_details.company_name,
                     gst: buyer.company_details.gst_number || "N/A",
+                    // Add operator information
+                    assignedOperator: buyer.assigned_operator_details
+                        ? {
+                              moderator_id:
+                                  buyer.assigned_operator_details.moderator_id,
+                              name: buyer.assigned_operator_details.name,
+                              email: buyer.assigned_operator_details.email,
+                              phone_number:
+                                  buyer.assigned_operator_details.phone_number,
+                              role: buyer.assigned_operator_details.role,
+                          }
+                        : null,
+                    // Keep original assigned_operator ID for reference
+                    assignedOperatorId: buyer.assigned_operator,
                 }));
 
                 setBuyers(transformedData);
@@ -52,6 +77,7 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
         };
 
         fetchBuyers();
+        fetchOperators(); // I am putting these two calls synchronously, how high I am ?
     }, []);
 
     const handleBuyerClick = (buyer) => {
@@ -59,16 +85,24 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
         navigate(`/buyer-profile`, { state: { buyerId: buyer.id } });
     };
 
+    const handleOperatorClick = (operator) => {
+        navigate(`/operator-profile`, { state: { operatorData: operator } });
+    };
+
     // Pagination settings
     const itemsPerPage = 5;
 
-    // Filter buyers based on search
+    // Filter buyers based on search (including operator name)
     const filteredBuyers = buyers.filter(
         (buyer) =>
             buyer.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             buyer.mobile.includes(searchQuery) ||
             buyer.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            buyer.gst.toLowerCase().includes(searchQuery.toLowerCase())
+            buyer.gst.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (buyer.assignedOperator &&
+                buyer.assignedOperator.name
+                    .toLowerCase()
+                    .includes(searchQuery.toLowerCase()))
     );
 
     const totalPages = Math.ceil(filteredBuyers.length / itemsPerPage);
@@ -93,7 +127,10 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
     };
 
     const handleEdit = async (buyer) => {
-        setEditingBuyer({ ...buyer });
+        setEditingBuyer({
+            ...buyer,
+            assignedOperatorId: buyer.assignedOperatorId || "", // Include the operator ID for editing
+        });
         setIsEditModalOpen(true);
         setActiveDropdown(null);
         setFormErrors({});
@@ -102,7 +139,7 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
     const handleDelete = async (buyerId) => {
         if (window.confirm("Are you sure you want to delete this buyer?")) {
             try {
-                const response = await api.delete(`/user/${buyerId}`); // Use axios DELETE method
+                const response = await api.delete(`/user/${buyerId}`);
 
                 setBuyers(buyers.filter((b) => b.id !== buyerId));
                 setActiveDropdown(null);
@@ -117,7 +154,6 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
     const validateForm = () => {
         const errors = {};
 
-        // Check if any field is empty
         if (!editingBuyer.name.trim()) {
             errors.name = "Name is required";
         }
@@ -184,10 +220,23 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                     company_name: editingBuyer.company,
                     gst_number: editingBuyer.gst,
                 },
-            }); // Use axios PUT method
+                assigned_operator: editingBuyer.assignedOperatorId || "", // Add this line
+            });
+
+            // Update the local state with the new data
+            const updatedBuyer = {
+                ...editingBuyer,
+                assignedOperator: editingBuyer.assignedOperatorId
+                    ? operators.find(
+                          (op) =>
+                              op.moderator_id ===
+                              editingBuyer.assignedOperatorId
+                      )
+                    : null,
+            };
 
             setBuyers(
-                buyers.map((b) => (b.id === editingBuyer.id ? editingBuyer : b))
+                buyers.map((b) => (b.id === editingBuyer.id ? updatedBuyer : b))
             );
             setIsEditModalOpen(false);
             setEditingBuyer(null);
@@ -284,6 +333,9 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         GST No
                                     </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Assigned Operator
+                                    </th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Actions
                                     </th>
@@ -313,6 +365,27 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {buyer.gst}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {buyer.assignedOperator ? (
+                                                <button
+                                                    onClick={() =>
+                                                        handleOperatorClick(
+                                                            buyer.assignedOperator
+                                                        )
+                                                    }
+                                                    className="text-blue-600 hover:text-blue-800 hover:underline focus:outline-none"
+                                                >
+                                                    {
+                                                        buyer.assignedOperator
+                                                            .name
+                                                    }
+                                                </button>
+                                            ) : (
+                                                <span className="text-gray-400 italic">
+                                                    Not Assigned
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                                             <div className="relative inline-block">
@@ -515,6 +588,43 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                                         </p>
                                     )}
                                 </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">
+                                        Assigned Operator
+                                    </label>
+                                    <select
+                                        value={
+                                            editingBuyer.assignedOperatorId ||
+                                            ""
+                                        }
+                                        onChange={(e) =>
+                                            setEditingBuyer({
+                                                ...editingBuyer,
+                                                assignedOperatorId:
+                                                    e.target.value,
+                                            })
+                                        }
+                                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">
+                                            Select an operator (Optional)
+                                        </option>
+                                        {operators.map((operator) => (
+                                            <option
+                                                key={operator.moderator_id}
+                                                value={operator.moderator_id}
+                                            >
+                                                {operator.name} -{" "}
+                                                {operator.email}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {formErrors.assignedOperatorId && (
+                                        <p className="mt-1 text-sm text-red-600">
+                                            {formErrors.assignedOperatorId}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
                             <div className="mt-6 flex justify-end space-x-3">
                                 <button
@@ -536,6 +646,7 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
                             </div>
                         </form>
                     </div>
+                    //
                 </div>
             )}
         </div>
