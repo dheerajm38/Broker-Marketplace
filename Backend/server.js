@@ -23,7 +23,6 @@ import NotificationRoute from "./Routes/NotificationRoutes.js";
 import BroadcastRoute from "./Routes/broadcast_routes.js";
 import Dashboard from "./Routes/Dashboard.js";
 
-
 const app = express();
 const server = createServer(app);
 socketConfig(server);
