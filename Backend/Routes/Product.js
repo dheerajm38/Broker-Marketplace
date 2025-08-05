@@ -917,6 +917,76 @@ router.put("/update", upload.array("newImages", 5), async (req, res) => {
     }
 });
 
+//Update Only Product Price
+router.put("/update/price", async (req,res) => {
+    try {
+        let user;
+        if (req.body.userInfo) {
+            try {
+                user = JSON.parse(req.body.userInfo);
+            } catch (e) {
+                console.error("Error parsing userInfo:", e);
+            }
+        } else if (req.body.user) {
+            user = req.body.user;
+        } else {
+            // Use JWT from request if available
+            user = req.user?.user;
+        }
+
+        console.log("USER", user);
+
+        if (!user) {
+            return res.status(401).json({
+                status: "error",
+                message: "Unauthorized access",
+            });
+        }
+         const {
+            product_id,
+            price
+        } = req.body;
+
+        console.log("Updating Price for product_ID={}",product_id);
+
+        const updated_by = {
+            user_id: user.moderator_id,
+            user_name: user.name,
+        };
+
+        const product = await Product.scan("product_id").eq(product_id).exec();
+        if(product.length === 0) {
+             return res.status(500).json({
+            status: "Failure",
+            message: "Product Not Found"
+        });
+        }
+        console.log("Found PRODUCT", product);
+         const updatedProduct = await Product.update(
+            { product_id },
+            {
+                category: product[0].category,
+                sub_category: product[0].sub_category,
+                description: product[0].description,
+                price: +price,
+                price_details: product[0].price_details,
+                images: product[0].images,
+                location: product[0].location,
+                name: product[0].name,
+                status: product[0].status,
+                updated_by: updated_by,
+                last_updated_price: product[0].price,
+            }
+        );
+        return res.status(200).json({
+            status: "success",
+            message: "Product updated successfully",
+            data: updatedProduct,
+        });
+    } catch (error) {
+        console.log('Error', error);
+    }
+})
 // Get products by seller route
 router.get("/seller/:sellerId", async (req, res) => {
     try {

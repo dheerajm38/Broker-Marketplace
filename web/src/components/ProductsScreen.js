@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import {
     Search, Plus, ChevronLeft, ChevronRight,
-    Edit2, Trash2, X, Check, ArrowBigUp, ArrowBigDown
+    Edit2, Trash2, X, Check, ArrowBigUp, ArrowBigDown, Eye
 } from "lucide-react";
 import NavigationBar from "./NavigationBar";
 import Sidebar from "./Sidebar";
@@ -250,6 +250,29 @@ const ProductsContent = ({ isSidebarOpen }) => {
         }
     };
 
+    const handlePriceEdit = async (product) => {
+          try {
+            console.log("PRODUCT ", product)
+                await api.put(`/product/update/price`, {
+                    product_id: product.id,
+                    price: Number(product.editPriceValue)
+                });
+                // Refresh products after update
+                fetchProducts();
+            } catch (err) {
+                alert("Failed to update price");
+            } finally {
+                setProducts((prev) =>
+                    prev.map((p) =>
+                        p.id === product.id
+                            ? { ...p, isEditingPrice: false }
+                            : p
+                    )
+                );
+            }
+    }
+    
+
     return (
         <div className="h-full">
             <div className="max-w-7xl mx-auto">
@@ -345,30 +368,91 @@ const ProductsContent = ({ isSidebarOpen }) => {
                                                 <div className="text-sm text-gray-900">{product.category}</div>
                                                 <div className="text-xs text-gray-500">{product.subcategory}</div>
                                             </td>
+                                                
+
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm flex items-center">
-                                                    <span className="text-gray-900">₹{product.price}</span>
-                                                    { product.last_price && product.last_price!=0 ?(
+                                                    {/* Editable Price Section */}
+                                                    {product.isEditingPrice ? (
                                                         <>
-                                                            { product.last_price > 0 ? (
+                                                            <input
+                                                                type="number"
+                                                                value={product.editPriceValue}
+                                                                onChange={(e) => {
+                                                                    const newValue = e.target.value;
+                                                                    setProducts((prev) =>
+                                                                        prev.map((p) =>
+                                                                            p.id === product.id
+                                                                                ? { ...p, editPriceValue: newValue }
+                                                                                : p
+                                                                        )
+                                                                    );
+                                                                }}
+                                                                className="w-20 px-2 py-1 border rounded text-gray-900"
+                                                            />
+                                                            <button
+                                                                className="ml-2 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                                onClick={()=>handlePriceEdit(product)}
+                                                                  
+                                                            >
+                                                                Save
+                                                            </button>
+                                                            <button
+                                                                className="ml-1 px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                                                onClick={() => {
+                                                                    setProducts((prev) =>
+                                                                        prev.map((p) =>
+                                                                            p.id === product.id
+                                                                                ? { ...p, isEditingPrice: false }
+                                                                                : p
+                                                                        )
+                                                                    );
+                                                                }}
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="text-gray-900">₹{product.price}</span>
+                                                            <button
+                                                                className="ml-2 px-2 py-1 bg-yellow-100 text-yellow-800 rounded hover:bg-yellow-200"
+                                                                onClick={() => {
+                                                                    setProducts((prev) =>
+                                                                        prev.map((p) =>
+                                                                            p.id === product.id
+                                                                                ? { ...p, isEditingPrice: true, editPriceValue: p.price }
+                                                                                : p
+                                                                        )
+                                                                    );
+                                                                }}
+                                                                title="Edit Price"
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                    {product.last_price && product.last_price != 0 ? (
+                                                        <>
+                                                            {product.last_price < 0 ? (
                                                                 <span className="px-3 text-green-600 flex items-center gap-0.5">
-                                                                    <ArrowBigDown />
-                                                                    <span className="font-bold">{product.last_price}</span>
+                                                                    
+                                                                     <ArrowBigUp />
+                                                                    <span className="font-bold">{Math.abs(product.last_price)}</span>
                                                                 </span>
-                                                             ) : (
+                                                            ) : (
                                                                 <span className="px-3 text-red-600 flex items-center gap-0.5">
-                                                                    <ArrowBigUp />
+                                                                    <ArrowBigDown />
                                                                     <span className="font-bold">{Math.abs(product.last_price)}</span>
                                                                 </span>
                                                             )}
                                                         </>
-                                                    ):null
-                                                }
+                                                    ) : null}
                                                 </div>
-                                                {/* <div className="text-sm text-red-900">{product.last_price}</div> */}
                                                 <div className="text-xs text-gray-500">
-                                                    {product.price_details?.unit} - {product.price_details?.quantity}
+                                                    per {product.price_details?.quantity} KG
                                                 </div>
+                                                                                          
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex flex-col">
@@ -393,7 +477,7 @@ const ProductsContent = ({ isSidebarOpen }) => {
                                                         onClick={() => handleProductEdit(product.id)}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
-                                                        <Edit2 className="h-5 w-5" />
+                                                        <Eye className="h-5 w-5" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteProduct(product.id)}
