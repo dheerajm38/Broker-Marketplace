@@ -359,6 +359,21 @@ const OnboardProduct = ({ isSidebarOpen }) => {
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">
+                                    Rate
+                                </label>
+                                <input
+                                    type="number"
+                                    name="quantity"
+                                    value={formData.quantity}
+                                    onChange={handleChange}
+                                    placeholder="Enter rate"
+                                    className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
+                                    required
+                                    min="1"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-700">
                                     Price Unit
                                 </label>
                                 <select
@@ -378,21 +393,7 @@ const OnboardProduct = ({ isSidebarOpen }) => {
                                     ))}
                                 </select>
                             </div>
-                            <div>
-                                <label className="text-sm font-medium text-gray-700">
-                                    Quantity
-                                </label>
-                                <input
-                                    type="number"
-                                    name="quantity"
-                                    value={formData.quantity}
-                                    onChange={handleChange}
-                                    placeholder="Enter quantity"
-                                    className="mt-1 block w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-600"
-                                    required
-                                    min="1"
-                                />
-                            </div>
+                          
                             <div>
                                 <label className="text-sm font-medium text-gray-700">
                                     Subcategory

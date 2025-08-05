@@ -6,11 +6,6 @@ import NavigationBar from "./NavigationBar";
 import { PenSquare, X, Plus, Trash2 } from "lucide-react";
 import ContentWrapper from "./layout/ContentWrapper";
 
-// Import product images
-import ctCake from "../assets/ct-cake.jpeg";
-import ctnCake from "../assets/ctn-cake.jpeg";
-import cottonCake from "../assets/cotton-cake-cattle-feed.jpg";
-
 const ViewProduct = ({ isSidebarOpen }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -563,7 +558,7 @@ const ViewProduct = ({ isSidebarOpen }) => {
                         {/* Quantity */}
                         <div>
                             <h3 className="text-sm font-medium text-gray-700 mb-1">
-                                Quantity
+                                Rate
                             </h3>
                             {isEditing ? (
                                 <input
