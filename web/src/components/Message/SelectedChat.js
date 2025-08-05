@@ -20,8 +20,19 @@ export default function SelectedChat({ selectedChat }) {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     };
+
     useEffect(() => {
-        console.log("Selected Chat", selectedChat);
+        // Reset state when a new chat is selected
+        setChatMessages([]);
+        setLoadedMsg(0);
+        setNoMoreMessages(false);
+        // Fetch messages for the new chat
+        fetchChat();
+
+        scrollToBottom();
+}, [selectedChat]);
+
+    useEffect(() => {
         const handlenewmessaage =(data) =>{
             if(socket){ 
                 // Listen for the 'newprivateMessage' event
@@ -36,8 +47,8 @@ export default function SelectedChat({ selectedChat }) {
                                 message_body: data.content,
                                 sender_id: data.sender_id,
                                 receiver_id: data.receiver_id,
-                                createdAt: "2021-09-01T00:00:00.000Z", // Use the current date for the createdAt field
-                                updatedAt: "2021-09-01T00:00:00.000Z", // Use the current date for the updatedAt field
+                                createdAt: data.createdAt, // Use the current date for the createdAt field
+                                updatedAt: data.updatedAt, // Use the current date for the updatedAt field
                             },
                         ]);
                         scrollToBottom(); // Scroll to the bottom to show the new message
@@ -60,8 +71,6 @@ export default function SelectedChat({ selectedChat }) {
             scrollToBottom();
         }
     }, [chatMessages]);
-
-    
   
     const handleScroll = () => {
         if (messagesContainerRef.current.scrollTop === 0) {

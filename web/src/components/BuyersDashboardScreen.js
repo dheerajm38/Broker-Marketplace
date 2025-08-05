@@ -168,9 +168,7 @@ const BuyersDashboard = ({ isSidebarOpen }) => {
             errors.company = "Company name is required";
         }
 
-        if (!editingBuyer.gst.trim()) {
-            errors.gst = "GST number is required";
-        } else if (editingBuyer.gst.length !== 15) {
+        if (editingBuyer.gst!=null && editingBuyer.gst!='N/A' &&editingBuyer.gst.length !== 15) {
             errors.gst = "GST number must be exactly 15 characters";
         }
 
