@@ -142,12 +142,17 @@ const MessagesContent = ({ isSidebarOpen }) => {
         return chatList.filter(
             (chat) =>
                 chat.name.toLowerCase().includes(query) ||
-                chat.lastMessage.toLowerCase().includes(query) ||
-                chat.messages.some((msg) =>
-                    msg.text.toLowerCase().includes(query)
-                )
+                (chat.last_interaction || '').toLowerCase().includes(query)
         );
     }, [chatList, searchQuery]);
+
+    const sortedChatList = useMemo(() => {
+        return [...filteredChats].sort((a, b) => {
+            const timestampA = new Date(a.timestamp).getTime();
+            const timestampB = new Date(b.timestamp).getTime();
+            return timestampB - timestampA; 
+        });
+    }, [filteredChats]);
 
     const truncateText = (text, maxLength = 30) => {
         return text.length > maxLength
@@ -210,8 +215,8 @@ const MessagesContent = ({ isSidebarOpen }) => {
 
                     <div className="flex-1 overflow-y-auto">
                         {
-                            chatList.length > 0 ? (
-                                chatList.map((chat) => (
+                            sortedChatList.length > 0 ? (
+                                sortedChatList.map((chat) => (
                                     <div
                                         key={chat.id}
                                         onClick={() => setSelectedChat(chat)}
