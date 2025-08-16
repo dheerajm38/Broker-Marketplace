@@ -1,4 +1,3 @@
-
 import { SendHorizontal, User } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { fetchMessages } from "./Api/MessageApi";
@@ -16,88 +15,84 @@ export default function SelectedChat({ selectedChat }) {
     const messagesContainerRef = useRef(null);
     const [loadedMsg, setLoadedMsg] = useState(0);
     const [noMoreMessages, setNoMoreMessages] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
     };
 
     useEffect(() => {
-        // Reset state when a new chat is selected
-        setChatMessages([]);
-        setLoadedMsg(0);
-        setNoMoreMessages(false);
-        // Fetch messages for the new chat
-        fetchChat();
+        const fetchInitialMessages = async () => {
+            if (!selectedChat?.user_id) return;
 
-        scrollToBottom();
-}, [selectedChat]);
+            setChatMessages([]);
+            setLoadedMsg(0);
+            setNoMoreMessages(false);
+
+            try {
+                const response = await fetchMessages(user.userId, selectedChat.user_id, 0);
+                if (response.length < 10) {
+                    setNoMoreMessages(true);
+                }
+                setChatMessages(sortMessages(response));
+                setLoadedMsg(10);
+                scrollToBottom();
+            } catch (exception) {
+                // handle error
+            }
+        };
+
+        fetchInitialMessages();
+    }, [selectedChat]);
 
     useEffect(() => {
         const handlenewmessaage =(data) =>{
             if(socket){ 
-                // Listen for the 'newprivateMessage' event
-        
-                    console.log('New private message received:', data);
-            
-                    // Check if the message belongs to the currently selected chat
-                    if (data.sender_id === selectedChat.user_id || data.receiver_id === selectedChat.user_id) {
-                        setChatMessages((prevChatMessages) => [
-                            ...prevChatMessages,
-                            {
-                                message_body: data.content,
-                                sender_id: data.sender_id,
-                                receiver_id: data.receiver_id,
-                                createdAt: data.createdAt, // Use the current date for the createdAt field
-                                updatedAt: data.updatedAt, // Use the current date for the updatedAt field
-                            },
-                        ]);
-                        scrollToBottom(); // Scroll to the bottom to show the new message
-                    }      
-            
+                if (data.sender_id === selectedChat.user_id || data.receiver_id === selectedChat.user_id) {
+                    setChatMessages((prevChatMessages) => sortMessages([
+                        ...prevChatMessages,
+                        {
+                            message_body: data.content,
+                            sender_id: data.sender_id,
+                            receiver_id: data.receiver_id,
+                            createdAt: data.createdAt, // Use the current date for the createdAt field
+                            updatedAt: data.updatedAt, // Use the current date for the updatedAt field
+                        },
+                    ]));
+                    scrollToBottom(); // Scroll to the bottom to show the new message
+                }      
             }
         }
         socket.on('newprivateMessage', handlenewmessaage);
     
-    // Clean up function - remove event listener when component unmounts or deps change
-    return () => {
-      socket.off('newprivateMessage', handlenewmessaage);
-    
-  };
-    },[socket]);
+        return () => {
+          socket.off('newprivateMessage', handlenewmessaage);
+        };
+    },[socket, selectedChat]);
 
-    useEffect(() => {
-        if(chatMessages.length == 10)
-        {
-            scrollToBottom();
-        }
-    }, [chatMessages]);
-  
-    const handleScroll = () => {
-        if (messagesContainerRef.current.scrollTop === 0) {
-            if(!noMoreMessages) {
-                console.log("OK herr");
-                fetchChat();
+    const fetchMoreMessages = async () => {
+        if (noMoreMessages || loadingMore) return;
+
+        setLoadingMore(true);
+        try {
+            const response = await fetchMessages(user.userId, selectedChat.user_id, loadedMsg);
+            if (response.length < 10) {
+                setNoMoreMessages(true);
             }
+            setChatMessages(prev => sortMessages([...response, ...prev]));
+            setLoadedMsg(prev => prev + 10);
+        } catch (exception) {
+            // handle error
+        } finally {
+            setLoadingMore(false);
         }
     };
 
-    const fetchChat = async () => {
-        try{
-            const response = await fetchMessages(user.userId, selectedChat.user_id, loadedMsg);
-            if(response.length < 10) {
-                setNoMoreMessages(true);
-            }
-            const combo = [...chatMessages, ...response];
-            const sortedMessages = sortMessages(combo);
-            setLoadedMsg(loadedMsg + 10);
-            setChatMessages(sortedMessages);
-        } catch(exception) {
+    const handleScroll = () => {
+        if (messagesContainerRef.current.scrollTop === 0) {
+            fetchMoreMessages();
         }
-    }
-    
-    useEffect(() => {
-        fetchChat();    
-    }, []);
+    };
     
     const handleSendMessage = (e) => {
         e.preventDefault();
@@ -137,8 +132,8 @@ export default function SelectedChat({ selectedChat }) {
                     <div className="flex-1 overflow-y-auto p-4"               
                       ref={messagesContainerRef}
                         onScroll={handleScroll}>
-                        {chatMessages.map((msg) => (
-                            <div key={msg.message_id} className="mb-4">
+                        {chatMessages.map((msg, index) => (
+                            <div key={index} className="mb-4">
                                 <div
                                     className={`${
                                         msg.sender_id === user.userId

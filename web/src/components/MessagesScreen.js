@@ -211,9 +211,9 @@ const MessagesContent = ({ isSidebarOpen }) => {
                             sortedChatList.length > 0 ? (
                                 sortedChatList.map((chat) => (
                                     <div
-                                        key={chat.id}
+                                        key={chat.user_id}
                                         onClick={() => setSelectedChat(chat)}
-                                        className={`flex items-center h-20 px-4 cursor-pointer hover:bg-gray-50 ${selectedChat?.id === chat.id
+                                        className={`flex items-center h-20 px-4 cursor-pointer hover:bg-gray-50 ${selectedChat?.user_id === chat.user_id
                                             ? "bg-blue-50"
                                             : ""
                                             }`}
@@ -253,7 +253,7 @@ const MessagesContent = ({ isSidebarOpen }) => {
                         onSendBroadcast={handleBroadcast}
                     />
                 ) : selectedChat ? (
-                    <SelectedChat key={selectedChat.id} selectedChat={selectedChat} />
+                    <SelectedChat key={selectedChat.user_id} selectedChat={selectedChat} />
                 ) : (
                     <div className="flex-1 flex items-center justify-center bg-white">
                         <p className="text-gray-500">
