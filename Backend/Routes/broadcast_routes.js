@@ -51,10 +51,11 @@ router.get('/', async (req, res) => {
         // Get all broadcasts
         const broadcasts = await Broadcast.scan().exec();
 
-        // Sort by creation date
+        // Sort by updatedAt date (newest first by default)
         broadcasts.sort((a, b) => {
-            const comparison = new Date(b.created_at) - new Date(a.created_at);
-            return sort === 'desc' ? comparison : -comparison;
+            const dateA = new Date(a.updatedAt || a.createdAt);
+            const dateB = new Date(b.updatedAt || b.createdAt);
+            return sort === 'asc' ? dateA - dateB : dateB - dateA;
         });
 
         // Implement pagination
@@ -70,7 +71,9 @@ router.get('/', async (req, res) => {
                 total: broadcasts.length,
                 current_page: parseInt(page),
                 per_page: parseInt(limit),
-                total_pages: Math.ceil(broadcasts.length / limit)
+                total_pages: Math.ceil(broadcasts.length / limit),
+                has_next: endIndex < broadcasts.length,
+                has_previous: startIndex > 0
             }
         });
     } catch (error) {

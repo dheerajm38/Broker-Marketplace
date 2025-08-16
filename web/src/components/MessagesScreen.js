@@ -204,13 +204,6 @@ const MessagesContent = ({ isSidebarOpen }) => {
                                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
                             />
                         </div>
-                        <button
-                            onClick={() => setIsBroadcastView(!isBroadcastView)}
-                            className={`ml-4 p-2 rounded-lg transition-colors flex items-center gap-2 ${isBroadcastView ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
-                                }`}
-                        >
-                            <MegaphoneIcon size={20} />
-                        </button>
                     </div>
 
                     <div className="flex-1 overflow-y-auto">

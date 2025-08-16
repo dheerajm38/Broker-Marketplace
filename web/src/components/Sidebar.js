@@ -8,7 +8,8 @@ import {
     Store,
     ShoppingBag,
     MessageSquare,
-    Package
+    Package,
+    Megaphone
 } from "lucide-react";
 
 export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
@@ -23,7 +24,8 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
         { label: "Tickets", path: "/tickets", icon: TicketCheck },
         { label: "Sellers", path: "/sellers", icon: Store },
         { label: "Buyers", path: "/buyers", icon: ShoppingBag },
-        { label: "Messages", path: "/messages", icon: MessageSquare }
+        { label: "Messages", path: "/messages", icon: MessageSquare },
+        { label: "Broadcasts", path: "/broadcasts", icon: Megaphone, allowedRoles: ["Admin", "Operator"] }
     ];
 
     return (

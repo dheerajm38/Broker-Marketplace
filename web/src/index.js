@@ -32,6 +32,7 @@ import { AuthProvider } from "./contexts/authContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import SignOut from "./components/SignOut";
 import ViewSellerProductScreen from './components/ViewSellerProductScreen';
+import BroadcastScreen from './components/BroadcastScreen';
 
 const router = createBrowserRouter([
     {
@@ -93,6 +94,14 @@ const router = createBrowserRouter([
                 <SocketProvider>
                     <MessagesScreen />
                 </SocketProvider>
+            </ProtectedRoute>
+        ),
+    },
+    {
+        path: "/broadcasts",
+        element: (
+            <ProtectedRoute requiredRoles={["Admin", "Operator"]}>
+                <BroadcastScreen />
             </ProtectedRoute>
         ),
     },
