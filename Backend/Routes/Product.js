@@ -176,8 +176,9 @@ router.get("/all/user", async (req, res) => {
         const limit = parseInt(pageSize);
 
         // Get tickets raised by user
-        const ticketsRaisedList = await Ticket.scan("buyer_id")
+        const ticketsRaisedList = await Ticket.query("buyer_id")
             .eq(userID)
+            .using("buyerIndex")
             .exec();
 
         let productList = [];
@@ -305,8 +306,9 @@ router.post("/all/user/new", async (req, res) => {
         const limit = parseInt(pageSize);
 
         // Get tickets raised by user
-        const ticketsRaisedList = await Ticket.scan("buyer_id")
+        const ticketsRaisedList = await Ticket.query("buyer_id")
             .eq(userID)
+            .using("buyerIndex")
             .exec();
 
         // Get user's favorites
@@ -1143,6 +1145,12 @@ const transformToProductsListResponse = (
     userId,
     favoriteProductIds = new Set() 
 ) => {
+    const inProgressProductIds = new Set(
+        ticketsRaisedList
+            .filter((ticket) => ticket.status === "InProgress")
+            .map((ticket) => ticket.product_id)
+    );
+
     const transformedProducts = products.map((product) => ({
         id: product.product_id,
         name: product.name,
@@ -1159,9 +1167,7 @@ const transformToProductsListResponse = (
         },
         status: product.status,
         updatedAt: product.updatedAt,
-        isInterested: ticketsRaisedList.some(
-            (ticket) => ticket.product_id === product.product_id
-        ),
+        isInterested: inProgressProductIds.has(product.product_id),
         isFavorite: favoriteProductIds.has(product.product_id), // Add favorite status
         updatedBy: product.updated_by,
         last_price: product.last_updated_price - product.price,
@@ -1275,8 +1281,9 @@ router.post("/favorites/user", async (req, res) => {
         }
 
         // Get tickets raised by user (for interested status)
-        const ticketsRaisedList = await Ticket.scan("buyer_id")
+        const ticketsRaisedList = await Ticket.query("buyer_id")
             .eq(user_id)
+            .using("buyerIndex")
             .exec();
 
         // Get all favorite products
