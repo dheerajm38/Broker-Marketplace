@@ -618,6 +618,49 @@ const ViewProduct = ({ isSidebarOpen }) => {
                                 {product.status}
                             </p>
                         </div>
+                        <div>
+                            <h3 className="text-sm font-medium text-gray-700 mb-1">
+                                Status
+                            </h3>
+                            <p
+                                className={`inline-flex px-2 py-1 rounded-full text-sm ${
+                                    product.status === "active"
+                                        ? "bg-green-100 text-green-800"
+                                        : "bg-red-100 text-red-800"
+                                }`}
+                            >
+                                {product.status}
+                            </p>
+                        </div>
+
+                        {/* Description - Full width across both columns */}
+                        <div className="md:col-span-2">
+                            <h3 className="text-sm font-medium text-gray-700 mb-1">
+                                Description
+                            </h3>
+                            {isEditing ? (
+                                <textarea
+                                    value={product.description || ""}
+                                    onChange={(e) =>
+                                        setProduct({
+                                            ...product,
+                                            description: e.target.value,
+                                        })
+                                    }
+                                    className={`mt-1 block w-full px-3 py-2 rounded-md text-gray-900 transition-all duration-200 resize-vertical min-h-[80px] ${
+                                        isEditing
+                                            ? "bg-white border-2 border-blue-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            : "bg-gray-50 border border-gray-200 focus:outline-none cursor-default"
+                                    }`}
+                                    placeholder="Enter product description"
+                                    rows="3"
+                                />
+                            ) : (
+                                <p className="text-gray-900">
+                                    {product.description || "No description available"}
+                                </p>
+                            )}
+                        </div>
                     </div>
                 </div>
 

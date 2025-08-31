@@ -48,6 +48,10 @@ export const ProductSchema = new dynamoose.Schema(
             type: Number,
             required: true,
         },
+        description: {
+            type: String,
+            required: true,
+        },
         price_details: {
             type: Object,
             schema: {

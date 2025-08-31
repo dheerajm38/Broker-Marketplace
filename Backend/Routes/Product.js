@@ -164,6 +164,7 @@ router.post("/add", upload.array("images", 5), async (req, res) => {
 // Get Products route
 router.get("/all/user", async (req, res) => {
     try {
+        console.log("req.body", req.body);
         const { pageNumber = 1, pageSize = 5, location } = req.query;
         const userID = "40402"; // TODO: Replace with actual user ID from auth
         const { user } = req.user;
@@ -690,6 +691,8 @@ router.get("/:productId", async (req, res) => {
                 seller[0]?.company_details?.company_name || "Unknown Company",
         };
 
+
+        console.log("PRODUCT", productWithSellerDetails);
 
         return res.status(200).json({
             status: "success",

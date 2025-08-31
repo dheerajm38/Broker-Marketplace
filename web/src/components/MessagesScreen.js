@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/authContext";
 import SelectedChat from "./Message/SelectedChat";
 import ContentWrapper from "./layout/ContentWrapper";
 import { MegaphoneIcon, X, SendHorizontal } from 'lucide-react';
+import { api } from "./axiosConfig";
 
 const BroadcastChat = ({ messages = [], onSendBroadcast }) => {
     const [newMessage, setNewMessage] = useState("");
