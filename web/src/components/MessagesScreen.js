@@ -136,6 +136,21 @@ const MessagesContent = ({ isSidebarOpen }) => {
         fetchBroadcastHistory();
     }, []);
 
+    const updateChatLatestMessage = (chatId, message) => {
+        console.log("Updating chat list for chatId:", chatId, "with message:", message);
+        setChatList((prevChats) =>
+            prevChats.map((chat) =>
+                chat.user_id === chatId
+                    ? { ...chat, 
+                        last_interaction: message,  
+                        read_status: "read",
+                        timestamp: new Date().toISOString() 
+                    }
+                    : chat      
+            )
+        );  
+    };
+
     const filteredChats = useMemo(() => {
         const query = searchQuery.toLowerCase().trim();
         if (!query) return chatList;
@@ -207,7 +222,7 @@ const MessagesContent = ({ isSidebarOpen }) => {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto">
+                    <div className="flex-1 overflow-y-auto" key={chatList.length}>
                         {
                             sortedChatList.length > 0 ? (
                                 sortedChatList.map((chat) => (
@@ -254,7 +269,7 @@ const MessagesContent = ({ isSidebarOpen }) => {
                         onSendBroadcast={handleBroadcast}
                     />
                 ) : selectedChat ? (
-                    <SelectedChat key={selectedChat.user_id} selectedChat={selectedChat} />
+                    <SelectedChat key={selectedChat.user_id} selectedChat={selectedChat} updateChatLatestMessage={updateChatLatestMessage}/>
                 ) : (
                     <div className="flex-1 flex items-center justify-center bg-white">
                         <p className="text-gray-500">
