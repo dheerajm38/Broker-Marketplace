@@ -8,6 +8,7 @@ import { useAuth } from "../contexts/authContext";
 import SelectedChat from "./Message/SelectedChat";
 import ContentWrapper from "./layout/ContentWrapper";
 import { MegaphoneIcon, X, SendHorizontal } from 'lucide-react';
+import { api } from "./axiosConfig";
 
 const BroadcastChat = ({ messages = [], onSendBroadcast }) => {
     const [newMessage, setNewMessage] = useState("");
@@ -157,12 +158,17 @@ const MessagesContent = ({ isSidebarOpen }) => {
         return chatList.filter(
             (chat) =>
                 chat.name.toLowerCase().includes(query) ||
-                chat.lastMessage.toLowerCase().includes(query) ||
-                chat.messages.some((msg) =>
-                    msg.text.toLowerCase().includes(query)
-                )
+                (chat.last_interaction || '').toLowerCase().includes(query)
         );
     }, [chatList, searchQuery]);
+
+    const sortedChatList = useMemo(() => {
+        return [...filteredChats].sort((a, b) => {
+            const timestampA = new Date(a.timestamp).getTime();
+            const timestampB = new Date(b.timestamp).getTime();
+            return timestampB - timestampA; 
+        });
+    }, [filteredChats]);
 
     const truncateText = (text, maxLength = 30) => {
         return text.length > maxLength
@@ -214,23 +220,16 @@ const MessagesContent = ({ isSidebarOpen }) => {
                                 className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
                             />
                         </div>
-                        <button
-                            onClick={() => setIsBroadcastView(!isBroadcastView)}
-                            className={`ml-4 p-2 rounded-lg transition-colors flex items-center gap-2 ${isBroadcastView ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50'
-                                }`}
-                        >
-                            <MegaphoneIcon size={20} />
-                        </button>
                     </div>
 
                     <div className="flex-1 overflow-y-auto" key={chatList.length}>
                         {
-                            chatList.length > 0 ? (
-                                chatList.map((chat) => (
+                            sortedChatList.length > 0 ? (
+                                sortedChatList.map((chat) => (
                                     <div
-                                        key={chat.id}
+                                        key={chat.user_id}
                                         onClick={() => setSelectedChat(chat)}
-                                        className={`flex items-center h-20 px-4 cursor-pointer hover:bg-gray-50 ${selectedChat?.id === chat.id
+                                        className={`flex items-center h-20 px-4 cursor-pointer hover:bg-gray-50 ${selectedChat?.user_id === chat.user_id
                                             ? "bg-blue-50"
                                             : ""
                                             }`}
@@ -270,7 +269,7 @@ const MessagesContent = ({ isSidebarOpen }) => {
                         onSendBroadcast={handleBroadcast}
                     />
                 ) : selectedChat ? (
-                    <SelectedChat key={selectedChat.id} selectedChat={selectedChat} updateChatLatestMessage={updateChatLatestMessage}/>
+                    <SelectedChat key={selectedChat.user_id} selectedChat={selectedChat} updateChatLatestMessage={updateChatLatestMessage}/>
                 ) : (
                     <div className="flex-1 flex items-center justify-center bg-white">
                         <p className="text-gray-500">

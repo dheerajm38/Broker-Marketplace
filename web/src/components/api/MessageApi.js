@@ -13,18 +13,7 @@ export const fetchChatList = async (userId) => {
     }
 };
 
-export const fetchMessages = async (senderId, receiverId) => {
-    try {
-        const response = await axios.get(
-            `https://api.dhirajmittal.com/message/getMessages/${senderId}/${receiverId}`
-        );
-        return response.data;
-    } catch (error) {
-        console.error(error);
-    }
-};
-
-export const fetchMessagesSender = async (
+export const fetchMessages = async (
     senderId,
     receiverId,
     messageStart

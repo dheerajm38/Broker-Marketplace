@@ -39,7 +39,8 @@ export const authMiddleware = (req, res, next) => {
         );
         console.log("Decoded", decoded);
         req.user = decoded;
-        console.log("Tokein verfied successfully...Proceeding towards controller.");
+        console.log("Path: " + req.path);
+        console.log("Token verfied successfully...Proceeding towards controller.");
         next();
     } catch (error) {
         if (error.name === "TokenExpiredError") {

@@ -230,6 +230,12 @@ const getTicketByOperatorID = async (req, res) => {
             totalItems = scanResult.length;
         }
 
+        scanResult.sort((a, b) => {
+            const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            return dateB - dateA;
+        });
+
         // Calculate the start position
         const startPosition = (page - 1) * limit;
 
@@ -307,6 +313,12 @@ const getAllTickets = async (req, res) => {
         // Scan all tickets
         let scanResult = await Ticket.scan().exec();
         const totalItems = scanResult.length;
+
+        scanResult.sort((a, b) => {
+            const dateA = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+            const dateB = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+            return dateB - dateA;
+        });
 
         // Apply pagination manually
         const tickets = scanResult.slice(startPosition, startPosition + limit);
