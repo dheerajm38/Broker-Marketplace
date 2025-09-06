@@ -6,7 +6,7 @@ import { useAuth } from "../../contexts/authContext";
 import { sortMessages } from "./Utils/MessageUtil";
 import { useSocket } from "../../contexts/SocketContext";
 
-export default function SelectedChat({ selectedChat }) {
+export default function SelectedChat({ selectedChat, updateChatLatestMessage }) {
 
     const [message, setMessage] = useState("");
     const [chatMessages, setChatMessages] = useState([]);
@@ -52,6 +52,7 @@ export default function SelectedChat({ selectedChat }) {
                             },
                         ]);
                         scrollToBottom(); // Scroll to the bottom to show the new message
+                        updateChatLatestMessage(selectedChat.user_id, data.content);
                     }      
             
             }
@@ -110,6 +111,7 @@ export default function SelectedChat({ selectedChat }) {
                 createdAt: Math.floor(Date.now() / 1000),
             };
             setChatMessages([...chatMessages, newMessage]);
+            updateChatLatestMessage(selectedChat.user_id, message.trim());
             setMessage("");
             socket.emit('privateMessage', {
                 content:message, 

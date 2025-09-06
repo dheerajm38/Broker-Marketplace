@@ -715,10 +715,10 @@ const TicketDetail = ({ notification, onTicketClick }) => {
                             .buyer_name
                     }
                 />
-                <DetailField
+                {/* <DetailField
                     label="Status"
                     value={notification.message.ticketDetails.status}
-                />
+                /> */}
             </div>
 
             <button
