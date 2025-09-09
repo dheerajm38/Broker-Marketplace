@@ -6,8 +6,37 @@ const router = express.Router();
 router.post("/basic-info", async (req, res) => {
     console.log("basic info called");
     try {
-        const { phone_number } = req.body;
-        // Check if user exists in the database
+   const { phone_number } = req.body;
+        
+    const user = await User.scan("contact_details.phone_number").eq(phone_number).exec();
+
+    if (user.count === 1) {
+      const myuser = user[0];
+
+      // Fetch operator if assigned
+      const operator = await Moderator.scan("moderator_id")
+        .eq(myuser.assigned_operator)
+        .exec();
+
+      if (operator.count === 0) {
+        return res.status(404).json({ message: "Operator not found" });
+      }
+
+      const accessToken = generateUserAccessToken(myuser);
+      const refreshToken = generateUserRefreshToken(myuser);
+
+      return res.status(200).json({
+        message: "User login successful",
+        status: "accepted",
+        accessToken,
+        refreshToken,
+        operator_id: myuser.assigned_operator,
+        user_id: myuser.user_id,
+        operatorPhoneNo: operator[0].phone_number,
+      });
+    }
+
+
 
         const existingOnboarding = await OnboardingRequest.scan("contact_details.phone_number").eq(phone_number).exec();
         console.log("Existing Onboarding:", existingOnboarding);
@@ -27,7 +56,7 @@ router.post("/basic-info", async (req, res) => {
                 return res.status(200).json(responseObject);
             case "accepted":
                 {
-                    const user = await User.scan("contact_details.phone_number").eq(phone_number).exec();
+                    // const user = await User.scan("contact_details.phone_number").eq(phone_number).exec();
                     if (!user) {
                         return res.status(404).json({ message: "User not found" });
                     }

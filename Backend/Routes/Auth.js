@@ -93,28 +93,54 @@ router.post("/login", async (req, res) => {
 
 //login mobile
 router.post("/login/user", async (req, res) => {
-  
-    try {
-        const { phone_number } = req.body;
-        const existingOnboarding = await OnboardingRequest.scan("contact_details.phone_number").eq(phone_number).exec();
-        if(existingOnboarding.count === 0) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        // problem here is that what if the admin manually add the buyer 
-        // then cant able to find in the onboarding schema
-        const sendOTPResponse = await sendOTP(phone_number);
+  try {
+    const { phone_number } = req.body;
 
-        const { verificationId } = sendOTPResponse.data;
+    // 1. First check in User table
+    const existingUser = await User.scan("contact_details.phone_number")
+      .eq(phone_number)
+      .exec();
 
-        return res.status(200).json({
-            message: "OTP sent successfully",
-            verificationId: verificationId,
-            phone_number: phone_number,
-        });
-    } catch (error) {
-        console.error("Error sending OTP:", error);
+    if (existingUser.count > 0) {
+      // ✅ Found a user → allow OTP
+      const sendOTPResponse = await sendOTP(phone_number);
+      const { verificationId } = sendOTPResponse.data;
+
+      return res.status(200).json({
+        message: "OTP sent successfully",
+        verificationId,
+        phone_number,
+      });
     }
+
+    // 2. If not in User, check Onboarding table
+    const existingOnboarding = await OnboardingRequest.scan("contact_details.phone_number")
+      .eq(phone_number)
+      .exec();
+
+    if (existingOnboarding.count > 0) {
+      // ✅ Found in onboarding → still allow OTP (status will be validated in /basic-info)
+      const sendOTPResponse = await sendOTP(phone_number);
+      const { verificationId } = sendOTPResponse.data;
+
+      return res.status(200).json({
+        message: "OTP sent successfully",
+        verificationId,
+        phone_number,
+      });
+    }
+
+    // 3. Not found in either → not registered at all
+    return res.status(404).json({
+      message: "User not found. Please sign up first.",
+    });
+
+  } catch (error) {
+    console.error("Error during login:", error);
+    return res.status(500).json({ message: "Server error during login" });
+  }
 });
+
 
 //sendotp mobile
 router.post("/sendotp/user", async (req, res) => {
