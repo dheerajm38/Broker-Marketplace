@@ -397,12 +397,15 @@ router.post("/all/user/new", async (req, res) => {
         if (sort) {
             switch (sort) {
                 case "Low to high":
+                case "price_low_to_high":
                     productList.sort((a, b) => a.price - b.price);
                     break;
                 case "High to low":
+                case "price_high_to_low":
                     productList.sort((a, b) => b.price - a.price);
                     break;
                 case "Newest":
+                case "newest":
                 default:
                     productList.sort(
                         (a, b) =>
@@ -1157,6 +1160,7 @@ const transformToProductsListResponse = (
     const transformedProducts = products.map((product) => ({
         id: product.product_id,
         name: product.name,
+        description: product.description,
         category: product.category?.category_name,
         subcategory: product.sub_category?.sub_category_name,
         seller_id: product.seller_id,
@@ -1190,6 +1194,7 @@ const transformToInterestedProductsListResponse = (
         .map((product) => ({
             id: product.product_id,
             name: product.name,
+            description: product.description,
             category: product.category?.category_name,
             subcategory: product.sub_category?.sub_category_name,
             seller_id: product.seller_id,
@@ -1329,12 +1334,15 @@ router.post("/favorites/user", async (req, res) => {
         if (sort) {
             switch (sort) {
                 case "Low to high":
+                case "price_low_to_high":
                     productList.sort((a, b) => a.price - b.price);
                     break;
                 case "High to low":
+                case "price_high_to_low":
                     productList.sort((a, b) => b.price - a.price);
                     break;
                 case "Newest":
+                case "newest":
                 default:
                     productList.sort(
                         (a, b) =>

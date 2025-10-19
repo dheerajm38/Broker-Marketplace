@@ -99,6 +99,8 @@ router.post("/login/user", async (req, res) => {
     // 1. First check in User table
     const existingUser = await User.scan("contact_details.phone_number")
       .eq(phone_number)
+      .where("role")
+      .eq("buyer")
       .exec();
 
     if (existingUser.count > 0) {

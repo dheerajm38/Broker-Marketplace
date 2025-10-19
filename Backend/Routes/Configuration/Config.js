@@ -8,7 +8,11 @@ router.post("/basic-info", async (req, res) => {
     try {
    const { phone_number } = req.body;
         
-    const user = await User.scan("contact_details.phone_number").eq(phone_number).exec();
+    const user = await User.scan("contact_details.phone_number")
+        .eq(phone_number)
+        .where("role")
+        .eq("buyer")
+        .exec();
 
     if (user.count === 1) {
       const myuser = user[0];
@@ -57,7 +61,7 @@ router.post("/basic-info", async (req, res) => {
             case "accepted":
                 {
                     // const user = await User.scan("contact_details.phone_number").eq(phone_number).exec();
-                    if (!user) {
+                    if (user.count === 0) {
                         return res.status(404).json({ message: "User not found" });
                     }
                     if(user.count > 1) {
